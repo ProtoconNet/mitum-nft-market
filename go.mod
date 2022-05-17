@@ -1,4 +1,4 @@
-module github.com/soonkuk/mitum-nft
+module github.com/ProtoconNet/mitum-nft-market
 
 go 1.17
 
