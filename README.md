@@ -1,6 +1,6 @@
-### mitum-nft
+### mitum-nft-market
 
-*mitum-nft* is a nft contract model based on [mitum](https://github.com/ProtoconNet/mitum).
+*mitum-nft-market* is a nft contract model based on [mitum](https://github.com/ProtoconNet/mitum).
 
 #### Features,
 
