@@ -1,7 +1,6 @@
 package broker
 
 import (
-	"github.com/ProtoconNet/mitum-nft-market/nft"
 	"github.com/spikeekips/mitum-currency/currency"
 	"github.com/spikeekips/mitum/base"
 	"github.com/spikeekips/mitum/util"
@@ -9,12 +8,13 @@ import (
 	"github.com/spikeekips/mitum/util/valuehash"
 )
 
-func (fact *SettleAuctionFact) unpack(
+func (fact *BrokerRegisterFact) unpack(
 	enc encoder.Encoder,
 	h valuehash.Hash,
 	token []byte,
 	bSender base.AddressDecoder,
-	bNFT []byte,
+	bTarget base.AddressDecoder,
+	bPolicy []byte,
 	cid string,
 ) error {
 	sender, err := bSender.Encode(enc)
@@ -22,17 +22,25 @@ func (fact *SettleAuctionFact) unpack(
 		return err
 	}
 
-	if hinter, err := enc.Decode(bNFT); err != nil {
+	target, err := bTarget.Encode(enc)
+	if err != nil {
 		return err
-	} else if nft, ok := hinter.(nft.NFTID); !ok {
-		return util.WrongTypeError.Errorf("not NFTID; %T", hinter)
+	}
+
+	var policy BrokerPolicy
+	if hinter, err := enc.Decode(bPolicy); err != nil {
+		return err
+	} else if i, ok := hinter.(BrokerPolicy); !ok {
+		return util.WrongTypeError.Errorf("not BrokerPolicy; %T", hinter)
 	} else {
-		fact.nft = nft
+		policy = i
 	}
 
 	fact.h = h
 	fact.token = token
 	fact.sender = sender
+	fact.target = target
+	fact.policy = policy
 	fact.cid = currency.CurrencyID(cid)
 
 	return nil

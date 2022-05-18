@@ -9,12 +9,12 @@ import (
 	"github.com/spikeekips/mitum/util/valuehash"
 )
 
-func (fact *SettleAuctionFact) unpack(
+func (fact *UnpostFact) unpack(
 	enc encoder.Encoder,
 	h valuehash.Hash,
 	token []byte,
 	bSender base.AddressDecoder,
-	bNFT []byte,
+	bNFTs []byte,
 	cid string,
 ) error {
 	sender, err := bSender.Encode(enc)
@@ -22,17 +22,25 @@ func (fact *SettleAuctionFact) unpack(
 		return err
 	}
 
-	if hinter, err := enc.Decode(bNFT); err != nil {
+	hNFTs, err := enc.DecodeSlice(bNFTs)
+	if err != nil {
 		return err
-	} else if nft, ok := hinter.(nft.NFTID); !ok {
-		return util.WrongTypeError.Errorf("not NFTID; %T", hinter)
-	} else {
-		fact.nft = nft
+	}
+
+	nfts := make([]nft.NFTID, len(hNFTs))
+	for i := range hNFTs {
+		j, ok := hNFTs[i].(nft.NFTID)
+		if !ok {
+			return util.WrongTypeError.Errorf("not NFTID; %T", hNFTs[i])
+		}
+
+		nfts[i] = j
 	}
 
 	fact.h = h
 	fact.token = token
 	fact.sender = sender
+	fact.nfts = nfts
 	fact.cid = currency.CurrencyID(cid)
 
 	return nil

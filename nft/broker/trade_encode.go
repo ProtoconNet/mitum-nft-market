@@ -9,7 +9,7 @@ import (
 	"github.com/spikeekips/mitum/util/valuehash"
 )
 
-func (fact *SettleAuctionFact) unpack(
+func (fact *TradeFact) unpack(
 	enc encoder.Encoder,
 	h valuehash.Hash,
 	token []byte,

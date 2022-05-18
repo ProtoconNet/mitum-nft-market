@@ -10,7 +10,7 @@ import (
 	"github.com/spikeekips/mitum/util/valuehash"
 )
 
-type SettleAuctionFactJSONPacker struct {
+type TradeFactJSONPacker struct {
 	jsonenc.HintedHead
 	H  valuehash.Hash      `json:"hash"`
 	TK []byte              `json:"token"`
@@ -19,8 +19,8 @@ type SettleAuctionFactJSONPacker struct {
 	CR currency.CurrencyID `json:"currency"`
 }
 
-func (fact SettleAuctionFact) MarshalJSON() ([]byte, error) {
-	return jsonenc.Marshal(SettleAuctionFactJSONPacker{
+func (fact TradeFact) MarshalJSON() ([]byte, error) {
+	return jsonenc.Marshal(TradeFactJSONPacker{
 		HintedHead: jsonenc.NewHintedHead(fact.Hint()),
 		H:          fact.h,
 		TK:         fact.token,
@@ -30,7 +30,7 @@ func (fact SettleAuctionFact) MarshalJSON() ([]byte, error) {
 	})
 }
 
-type SettleAuctionFactJSONUnpacker struct {
+type TradeFactJSONUnpacker struct {
 	H  valuehash.Bytes     `json:"hash"`
 	TK []byte              `json:"token"`
 	SD base.AddressDecoder `json:"sender"`
@@ -38,8 +38,8 @@ type SettleAuctionFactJSONUnpacker struct {
 	CR string              `json:"currency"`
 }
 
-func (fact *SettleAuctionFact) UnpackJSON(b []byte, enc *jsonenc.Encoder) error {
-	var ufact SettleAuctionFactJSONUnpacker
+func (fact *TradeFact) UnpackJSON(b []byte, enc *jsonenc.Encoder) error {
+	var ufact TradeFactJSONUnpacker
 	if err := enc.Unmarshal(b, &ufact); err != nil {
 		return err
 	}
@@ -47,7 +47,7 @@ func (fact *SettleAuctionFact) UnpackJSON(b []byte, enc *jsonenc.Encoder) error 
 	return fact.unpack(enc, ufact.H, ufact.TK, ufact.SD, ufact.NF, ufact.CR)
 }
 
-func (op *SettleAuction) UnpackJSON(b []byte, enc *jsonenc.Encoder) error {
+func (op *Trade) UnpackJSON(b []byte, enc *jsonenc.Encoder) error {
 	var ubo currency.BaseOperation
 	if err := ubo.UnpackJSON(b, enc); err != nil {
 		return err

@@ -10,44 +10,44 @@ import (
 	"github.com/spikeekips/mitum/util/valuehash"
 )
 
-type SettleAuctionFactJSONPacker struct {
+type BidFactJSONPacker struct {
 	jsonenc.HintedHead
-	H  valuehash.Hash      `json:"hash"`
-	TK []byte              `json:"token"`
-	SD base.Address        `json:"sender"`
-	NF nft.NFTID           `json:"nft"`
-	CR currency.CurrencyID `json:"currency"`
+	H  valuehash.Hash  `json:"hash"`
+	TK []byte          `json:"token"`
+	SD base.Address    `json:"sender"`
+	NF nft.NFTID       `json:"nft"`
+	AM currency.Amount `json:"amount"`
 }
 
-func (fact SettleAuctionFact) MarshalJSON() ([]byte, error) {
-	return jsonenc.Marshal(SettleAuctionFactJSONPacker{
+func (fact BidFact) MarshalJSON() ([]byte, error) {
+	return jsonenc.Marshal(BidFactJSONPacker{
 		HintedHead: jsonenc.NewHintedHead(fact.Hint()),
 		H:          fact.h,
 		TK:         fact.token,
 		SD:         fact.sender,
 		NF:         fact.nft,
-		CR:         fact.cid,
+		AM:         fact.amount,
 	})
 }
 
-type SettleAuctionFactJSONUnpacker struct {
+type BidFactJSONUnpacker struct {
 	H  valuehash.Bytes     `json:"hash"`
 	TK []byte              `json:"token"`
 	SD base.AddressDecoder `json:"sender"`
 	NF json.RawMessage     `json:"nft"`
-	CR string              `json:"currency"`
+	AM json.RawMessage     `json:"amount"`
 }
 
-func (fact *SettleAuctionFact) UnpackJSON(b []byte, enc *jsonenc.Encoder) error {
-	var ufact SettleAuctionFactJSONUnpacker
+func (fact *BidFact) UnpackJSON(b []byte, enc *jsonenc.Encoder) error {
+	var ufact BidFactJSONUnpacker
 	if err := enc.Unmarshal(b, &ufact); err != nil {
 		return err
 	}
 
-	return fact.unpack(enc, ufact.H, ufact.TK, ufact.SD, ufact.NF, ufact.CR)
+	return fact.unpack(enc, ufact.H, ufact.TK, ufact.SD, ufact.NF, ufact.AM)
 }
 
-func (op *SettleAuction) UnpackJSON(b []byte, enc *jsonenc.Encoder) error {
+func (op *Bid) UnpackJSON(b []byte, enc *jsonenc.Encoder) error {
 	var ubo currency.BaseOperation
 	if err := ubo.UnpackJSON(b, enc); err != nil {
 		return err

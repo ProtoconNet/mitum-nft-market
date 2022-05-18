@@ -3,51 +3,53 @@ package broker
 import (
 	"encoding/json"
 
-	"github.com/ProtoconNet/mitum-nft-market/nft"
 	"github.com/spikeekips/mitum-currency/currency"
 	"github.com/spikeekips/mitum/base"
 	jsonenc "github.com/spikeekips/mitum/util/encoder/json"
 	"github.com/spikeekips/mitum/util/valuehash"
 )
 
-type SettleAuctionFactJSONPacker struct {
+type BrokerRegisterFactJSONPacker struct {
 	jsonenc.HintedHead
 	H  valuehash.Hash      `json:"hash"`
 	TK []byte              `json:"token"`
 	SD base.Address        `json:"sender"`
-	NF nft.NFTID           `json:"nft"`
+	TG base.Address        `json:"target"`
+	PL BrokerPolicy        `json:"policy"`
 	CR currency.CurrencyID `json:"currency"`
 }
 
-func (fact SettleAuctionFact) MarshalJSON() ([]byte, error) {
-	return jsonenc.Marshal(SettleAuctionFactJSONPacker{
+func (fact BrokerRegisterFact) MarshalJSON() ([]byte, error) {
+	return jsonenc.Marshal(BrokerRegisterFactJSONPacker{
 		HintedHead: jsonenc.NewHintedHead(fact.Hint()),
 		H:          fact.h,
 		TK:         fact.token,
 		SD:         fact.sender,
-		NF:         fact.nft,
+		TG:         fact.target,
+		PL:         fact.policy,
 		CR:         fact.cid,
 	})
 }
 
-type SettleAuctionFactJSONUnpacker struct {
+type BrokerRegisterFactJSONUnpacker struct {
 	H  valuehash.Bytes     `json:"hash"`
 	TK []byte              `json:"token"`
 	SD base.AddressDecoder `json:"sender"`
-	NF json.RawMessage     `json:"nft"`
+	TG base.AddressDecoder `json:"target"`
+	PL json.RawMessage     `json:"policy"`
 	CR string              `json:"currency"`
 }
 
-func (fact *SettleAuctionFact) UnpackJSON(b []byte, enc *jsonenc.Encoder) error {
-	var ufact SettleAuctionFactJSONUnpacker
+func (fact *BrokerRegisterFact) UnpackJSON(b []byte, enc *jsonenc.Encoder) error {
+	var ufact BrokerRegisterFactJSONUnpacker
 	if err := enc.Unmarshal(b, &ufact); err != nil {
 		return err
 	}
 
-	return fact.unpack(enc, ufact.H, ufact.TK, ufact.SD, ufact.NF, ufact.CR)
+	return fact.unpack(enc, ufact.H, ufact.TK, ufact.SD, ufact.TG, ufact.PL, ufact.CR)
 }
 
-func (op *SettleAuction) UnpackJSON(b []byte, enc *jsonenc.Encoder) error {
+func (op *BrokerRegister) UnpackJSON(b []byte, enc *jsonenc.Encoder) error {
 	var ubo currency.BaseOperation
 	if err := ubo.UnpackJSON(b, enc); err != nil {
 		return err

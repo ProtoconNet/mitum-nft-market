@@ -1,4 +1,4 @@
-package broker // nolint: dupl, revive
+package nft
 
 import (
 	"github.com/pkg/errors"

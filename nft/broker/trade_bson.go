@@ -9,7 +9,7 @@ import (
 	"github.com/spikeekips/mitum/util/valuehash"
 )
 
-func (fact SettleAuctionFact) MarshalBSON() ([]byte, error) {
+func (fact TradeFact) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(
 		bsonenc.MergeBSONM(bsonenc.NewHintedDoc(fact.Hint()),
 			bson.M{
@@ -21,7 +21,7 @@ func (fact SettleAuctionFact) MarshalBSON() ([]byte, error) {
 			}))
 }
 
-type SettleAuctionFactBSONUnpacker struct {
+type TradeFactBSONUnpacker struct {
 	H  valuehash.Bytes     `bson:"hash"`
 	TK []byte              `bson:"token"`
 	SD base.AddressDecoder `bson:"sender"`
@@ -29,8 +29,8 @@ type SettleAuctionFactBSONUnpacker struct {
 	CR string              `bson:"currency"`
 }
 
-func (fact *SettleAuctionFact) UnpackBSON(b []byte, enc *bsonenc.Encoder) error {
-	var ufact SettleAuctionFactBSONUnpacker
+func (fact *TradeFact) UnpackBSON(b []byte, enc *bsonenc.Encoder) error {
+	var ufact TradeFactBSONUnpacker
 	if err := bson.Unmarshal(b, &ufact); err != nil {
 		return err
 	}
@@ -38,7 +38,7 @@ func (fact *SettleAuctionFact) UnpackBSON(b []byte, enc *bsonenc.Encoder) error 
 	return fact.unpack(enc, ufact.H, ufact.TK, ufact.SD, ufact.NF, ufact.CR)
 }
 
-func (op *SettleAuction) UnpackBSON(b []byte, enc *bsonenc.Encoder) error {
+func (op *Trade) UnpackBSON(b []byte, enc *bsonenc.Encoder) error {
 	var ubo currency.BaseOperation
 	if err := ubo.UnpackBSON(b, enc); err != nil {
 		return err

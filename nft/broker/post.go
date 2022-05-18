@@ -10,27 +10,27 @@ import (
 )
 
 var (
-	PostNFTsFactType   = hint.Type("mitum-nft-post-nfts-operation-fact")
-	PostNFTsFactHint   = hint.NewHint(PostNFTsFactType, "v0.0.1")
-	PostNFTsFactHinter = PostNFTsFact{BaseHinter: hint.NewBaseHinter(PostNFTsFactHint)}
-	PostNFTsType       = hint.Type("mitum-nft-post-nfts-operation")
-	PostNFTsHint       = hint.NewHint(PostNFTsType, "v0.0.1")
-	PostNFTsHinter     = PostNFTs{BaseOperation: operationHinter(PostNFTsHint)}
+	PostFactType   = hint.Type("mitum-nft-post-operation-fact")
+	PostFactHint   = hint.NewHint(PostFactType, "v0.0.1")
+	PostFactHinter = PostFact{BaseHinter: hint.NewBaseHinter(PostFactHint)}
+	PostType       = hint.Type("mitum-nft-post-operation")
+	PostHint       = hint.NewHint(PostType, "v0.0.1")
+	PostHinter     = Post{BaseOperation: operationHinter(PostHint)}
 )
 
-var MaxPostNFTsItem uint = 10
+var MaxPostItems = 10
 
-type PostNFTsFact struct {
+type PostFact struct {
 	hint.BaseHinter
 	h      valuehash.Hash
 	token  []byte
 	sender base.Address
-	items  []PostNFTsItem
+	items  []PostItem
 }
 
-func NewPostNFTsFact(token []byte, sender base.Address, items []PostNFTsItem, cid currency.CurrencyID) PostNFTsFact {
-	fact := PostNFTsFact{
-		BaseHinter: hint.NewBaseHinter(PostNFTsFactHint),
+func NewPostFact(token []byte, sender base.Address, items []PostItem, cid currency.CurrencyID) PostFact {
+	fact := PostFact{
+		BaseHinter: hint.NewBaseHinter(PostFactHint),
 		token:      token,
 		sender:     sender,
 		items:      items,
@@ -40,15 +40,15 @@ func NewPostNFTsFact(token []byte, sender base.Address, items []PostNFTsItem, ci
 	return fact
 }
 
-func (fact PostNFTsFact) Hash() valuehash.Hash {
+func (fact PostFact) Hash() valuehash.Hash {
 	return fact.h
 }
 
-func (fact PostNFTsFact) GenerateHash() valuehash.Hash {
+func (fact PostFact) GenerateHash() valuehash.Hash {
 	return valuehash.NewSHA256(fact.Bytes())
 }
 
-func (fact PostNFTsFact) Bytes() []byte {
+func (fact PostFact) Bytes() []byte {
 	is := make([][]byte, len(fact.items))
 	for i := range fact.items {
 		is[i] = fact.items[i].Bytes()
@@ -61,7 +61,7 @@ func (fact PostNFTsFact) Bytes() []byte {
 	)
 }
 
-func (fact PostNFTsFact) IsValid(b []byte) error {
+func (fact PostFact) IsValid(b []byte) error {
 	if err := fact.BaseHinter.IsValid(nil); err != nil {
 		return err
 	}
@@ -71,9 +71,9 @@ func (fact PostNFTsFact) IsValid(b []byte) error {
 	}
 
 	if n := len(fact.items); n < 1 {
-		return isvalid.InvalidError.Errorf("empty items")
-	} else if n > int(MaxPostNFTsItem) {
-		return isvalid.InvalidError.Errorf("items, %d over max, %d", n, MaxPostNFTsItem)
+		return isvalid.InvalidError.Errorf("empty items for PostFact")
+	} else if n > MaxPostItems {
+		return isvalid.InvalidError.Errorf("items over allowed; %d > %d", n, MaxPostItems)
 	}
 
 	if err := isvalid.Check(nil, false, fact.sender); err != nil {
@@ -93,7 +93,7 @@ func (fact PostNFTsFact) IsValid(b []byte) error {
 		}
 
 		if _, found := foundNFT[nft.String()]; found {
-			return isvalid.InvalidError.Errorf("duplicated nft found, %s", nft.String())
+			return isvalid.InvalidError.Errorf("duplicate nft found; %s", nft.String())
 		}
 
 		foundNFT[nft.String()] = true
@@ -102,19 +102,19 @@ func (fact PostNFTsFact) IsValid(b []byte) error {
 	return nil
 }
 
-func (fact PostNFTsFact) Token() []byte {
+func (fact PostFact) Token() []byte {
 	return fact.token
 }
 
-func (fact PostNFTsFact) Sender() base.Address {
+func (fact PostFact) Sender() base.Address {
 	return fact.sender
 }
 
-func (fact PostNFTsFact) Items() []PostNFTsItem {
+func (fact PostFact) Items() []PostItem {
 	return fact.items
 }
 
-func (fact PostNFTsFact) Addresses() ([]base.Address, error) {
+func (fact PostFact) Addresses() ([]base.Address, error) {
 	as := make([]base.Address, 1)
 
 	as[0] = fact.Sender()
@@ -122,8 +122,8 @@ func (fact PostNFTsFact) Addresses() ([]base.Address, error) {
 	return as, nil
 }
 
-func (fact PostNFTsFact) Rebuild() PostNFTsFact {
-	items := make([]PostNFTsItem, len(fact.items))
+func (fact PostFact) Rebuild() PostFact {
+	items := make([]PostItem, len(fact.items))
 	for i := range fact.items {
 		it := fact.items[i]
 		items[i] = it.Rebuild()
@@ -135,15 +135,15 @@ func (fact PostNFTsFact) Rebuild() PostNFTsFact {
 	return fact
 }
 
-type PostNFTs struct {
+type Post struct {
 	currency.BaseOperation
 }
 
-func NewPostNFTs(fact PostNFTsFact, fs []base.FactSign, memo string) (PostNFTs, error) {
-	bo, err := currency.NewBaseOperationFromFact(PostNFTsHint, fact, fs, memo)
+func NewPost(fact PostFact, fs []base.FactSign, memo string) (Post, error) {
+	bo, err := currency.NewBaseOperationFromFact(PostHint, fact, fs, memo)
 	if err != nil {
-		return PostNFTs{}, err
+		return Post{}, err
 	}
 
-	return PostNFTs{BaseOperation: bo}, nil
+	return Post{BaseOperation: bo}, nil
 }

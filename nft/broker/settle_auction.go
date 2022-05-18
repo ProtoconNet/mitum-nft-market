@@ -2,7 +2,6 @@ package broker
 
 import (
 	"github.com/ProtoconNet/mitum-nft-market/nft"
-	"github.com/pkg/errors"
 	"github.com/spikeekips/mitum-currency/currency"
 	"github.com/spikeekips/mitum/base"
 	"github.com/spikeekips/mitum/util"
@@ -69,7 +68,7 @@ func (fact SettleAuctionFact) IsValid(b []byte) error {
 	}
 
 	if len(fact.token) < 1 {
-		return errors.Errorf("empty token for SettleAuctionFact")
+		return isvalid.InvalidError.Errorf("empty token for SettleAuctionFact")
 	}
 
 	if err := isvalid.Check(

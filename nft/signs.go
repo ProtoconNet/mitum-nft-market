@@ -1,4 +1,4 @@
-package broker
+package nft
 
 import (
 	"github.com/spikeekips/mitum-currency/currency"
