@@ -130,12 +130,13 @@ type Posting struct {
 
 func NewPosting(broker nft.Symbol, option PostOption, nft nft.NFTID, closeTime PostCloseTime, price currency.Amount, biddings []Bidding) Posting {
 	return Posting{
-		broker:    broker,
-		option:    option,
-		nft:       nft,
-		closeTime: closeTime,
-		price:     price,
-		biddings:  biddings,
+		BaseHinter: hint.NewBaseHinter(PostingHint),
+		broker:     broker,
+		option:     option,
+		nft:        nft,
+		closeTime:  closeTime,
+		price:      price,
+		biddings:   biddings,
 	}
 }
 

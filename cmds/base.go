@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/ProtoconNet/mitum-account-extension/extension"
+	"github.com/ProtoconNet/mitum-nft-market/nft/broker"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
 
@@ -163,6 +164,18 @@ func AttachProposalProcessor(
 		return nil, err
 	} else if _, err := opr.SetProcessor(extension.WithdrawsHinter, extension.NewWithdrawsProcessor(cp)); err != nil {
 		return nil, err
+	} else if _, err := opr.SetProcessor(broker.PostHinter, broker.NewPostProcessor(cp)); err != nil {
+		return nil, err
+	} else if _, err := opr.SetProcessor(broker.TradeHinter, broker.NewTradeProcessor(cp)); err != nil {
+		return nil, err
+	} else if _, err := opr.SetProcessor(broker.BidHinter, broker.NewBidProcessor(cp)); err != nil {
+		return nil, err
+	} else if _, err := opr.SetProcessor(broker.SettleAuctionHinter, broker.NewSettleAuctionProcessor(cp)); err != nil {
+		return nil, err
+	} else if _, err := opr.SetProcessor(broker.UnpostHinter, broker.NewUnpostProcessor(cp)); err != nil {
+		return nil, err
+	} else if _, err := opr.SetProcessor(broker.BrokerRegisterHinter, broker.NewBrokerRegisterProcessor(cp)); err != nil {
+		return nil, err
 	}
 
 	threshold, err := base.NewThreshold(uint(len(suffrage.Nodes())), policy.ThresholdRatio())
@@ -225,6 +238,12 @@ func InitializeProposalProcessor(ctx context.Context, opr *extension.OperationPr
 		extension.CreateContractAccountsHinter,
 		extension.DeactivateHinter,
 		extension.WithdrawsHinter,
+		broker.PostHinter,
+		broker.TradeHinter,
+		broker.BidHinter,
+		broker.SettleAuctionHinter,
+		broker.UnpostHinter,
+		broker.BrokerRegisterHinter,
 	} {
 		if err := oprs.Add(hinter, opr); err != nil {
 			return ctx, err

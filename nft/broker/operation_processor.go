@@ -151,7 +151,13 @@ func (opr *OperationProcessor) Process(op state.Processor) error {
 		*currency.SuffrageInflationProcessor,
 		*extension.CreateContractAccountsProcessor,
 		*extension.DeactivateProcessor,
-		*extension.WithdrawsProcessor:
+		*extension.WithdrawsProcessor,
+		*BrokerRegisterProcessor,
+		*PostProcessor,
+		*UnpostProcessor,
+		*TradeProcessor,
+		*BidProcessor,
+		*SettleAuctionProcessor:
 		return opr.process(op)
 	case currency.Transfers,
 		currency.CreateAccounts,
@@ -161,7 +167,13 @@ func (opr *OperationProcessor) Process(op state.Processor) error {
 		currency.SuffrageInflation,
 		extension.CreateContractAccounts,
 		extension.Deactivate,
-		extension.Withdraws:
+		extension.Withdraws,
+		BrokerRegister,
+		Post,
+		Unpost,
+		Trade,
+		Bid,
+		SettleAuction:
 		pr, err := opr.PreProcess(op)
 		if err != nil {
 			return err
@@ -187,6 +199,18 @@ func (opr *OperationProcessor) process(op state.Processor) error {
 	case *extension.DeactivateProcessor:
 		sp = t
 	case *extension.WithdrawsProcessor:
+		sp = t
+	case *BrokerRegisterProcessor:
+		sp = t
+	case *PostProcessor:
+		sp = t
+	case *UnpostProcessor:
+		sp = t
+	case *TradeProcessor:
+		sp = t
+	case *BidProcessor:
+		sp = t
+	case *SettleAuctionProcessor:
 		sp = t
 	default:
 		return op.Process(opr.pool.Get, opr.pool.Set)
@@ -233,6 +257,24 @@ func (opr *OperationProcessor) checkDuplication(op state.Processor) error { // n
 		didtype = DuplicationTypeSender
 	case extension.Withdraws:
 		did = t.Fact().(extension.WithdrawsFact).Sender().String()
+		didtype = DuplicationTypeSender
+	case BrokerRegister:
+		did = t.Fact().(BrokerRegisterFact).Sender().String()
+		didtype = DuplicationTypeSender
+	case Post:
+		did = t.Fact().(PostFact).Sender().String()
+		didtype = DuplicationTypeSender
+	case Unpost:
+		did = t.Fact().(UnpostFact).Sender().String()
+		didtype = DuplicationTypeSender
+	case Trade:
+		did = t.Fact().(TradeFact).Sender().String()
+		didtype = DuplicationTypeSender
+	case Bid:
+		did = t.Fact().(BidFact).Sender().String()
+		didtype = DuplicationTypeSender
+	case SettleAuction:
+		did = t.Fact().(SettleAuctionFact).Sender().String()
 		didtype = DuplicationTypeSender
 	default:
 		return nil
@@ -321,7 +363,13 @@ func (opr *OperationProcessor) getNewProcessor(op state.Processor) (state.Proces
 		currency.SuffrageInflation,
 		extension.CreateContractAccounts,
 		extension.Deactivate,
-		extension.Withdraws:
+		extension.Withdraws,
+		BrokerRegister,
+		Post,
+		Unpost,
+		Trade,
+		Bid,
+		SettleAuction:
 
 		return nil, false, errors.Errorf("%T needs SetProcessor", t)
 	default:

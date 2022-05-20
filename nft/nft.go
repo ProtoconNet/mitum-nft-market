@@ -10,6 +10,8 @@ import (
 	"github.com/spikeekips/mitum/util/isvalid"
 )
 
+var BLACKHOLE_ZERO = currency.NewAddress("blackhole-0")
+
 var (
 	NFTIDType   = hint.Type("mitum-nft-nft-id")
 	NFTIDHint   = hint.NewHint(NFTIDType, "v0.0.1")
@@ -49,7 +51,7 @@ func (nid NFTID) Bytes() []byte {
 
 func (nid NFTID) IsValid([]byte) error {
 	if !nid.idx.OverZero() {
-		return isvalid.InvalidError.Errorf("zero collection idx")
+		return isvalid.InvalidError.Errorf("zero collection idx; %s", nid.idx.String())
 	}
 
 	if err := isvalid.Check(nil, false,
@@ -128,14 +130,14 @@ func NewCopyrighter(set bool, address base.Address) Copyrighter {
 		return Copyrighter{
 			BaseHinter: hint.NewBaseHinter(CopyrighterHint),
 			set:        set,
-			address:    nil,
+			address:    address,
 		}
 	}
 
 	return Copyrighter{
 		BaseHinter: hint.NewBaseHinter(CopyrighterHint),
 		set:        set,
-		address:    address,
+		address:    currency.Address{},
 	}
 }
 

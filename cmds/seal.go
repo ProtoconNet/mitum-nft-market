@@ -8,6 +8,12 @@ type SealCommand struct {
 	CreateContractAccount CreateContractAccountCommand              `cmd:"" name:"create-contract-account" help:"create new contract account"`
 	Deactivate            DeactivateCommand                         `cmd:"" name:"deactivate" help:"deactivate contract account"`
 	Withdraw              WithdrawCommand                           `cmd:"" name:"withdraw" help:"withdraw contract account"`
+	BrokerRegister        BrokerRegisterCommand                     `cmd:"" name:"broker-register" help:"register collection to contract account"`
+	Post                  PostCommand                               `cmd:"" name:"post" help:"post new sales and auctions"`
+	Unpost                UnpostCommand                             `cmd:"" name:"unpost" help:"unpost sales and auctions"`
+	Trade                 TradeCommand                              `cmd:"" name:"trade" help:"request nft trading"`
+	Bid                   BidCommand                                `cmd:"" name:"bid" help:"bid to nft"`
+	SettleAuction         SettleAuctionCommand                      `cmd:"" name:"settle-auction" help:"settle expired auction"`
 	Transfer              currencycmds.TransferCommand              `cmd:"" name:"transfer" help:"transfer big"`
 	KeyUpdater            currencycmds.KeyUpdaterCommand            `cmd:"" name:"key-updater" help:"update keys"`
 	CurrencyRegister      currencycmds.CurrencyRegisterCommand      `cmd:"" name:"currency-register" help:"register new currency"`
@@ -24,6 +30,12 @@ func NewSealCommand() SealCommand {
 		CreateContractAccount: NewCreateContractAccountCommand(),
 		Deactivate:            NewDeactivateCommand(),
 		Withdraw:              NewWithdrawCommand(),
+		BrokerRegister:        NewBrokerRegisterCommand(),
+		Post:                  NewPostCommand(),
+		Unpost:                NewUnpostCommand(),
+		Trade:                 NewTradeCommand(),
+		Bid:                   NewBidCommand(),
+		SettleAuction:         NewSettleAuctionCommand(),
 		Transfer:              currencycmds.NewTransferCommand(),
 		KeyUpdater:            currencycmds.NewKeyUpdaterCommand(),
 		CurrencyRegister:      currencycmds.NewCurrencyRegisterCommand(),

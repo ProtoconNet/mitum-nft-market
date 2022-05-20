@@ -28,7 +28,7 @@ type PostFact struct {
 	items  []PostItem
 }
 
-func NewPostFact(token []byte, sender base.Address, items []PostItem, cid currency.CurrencyID) PostFact {
+func NewPostFact(token []byte, sender base.Address, items []PostItem) PostFact {
 	fact := PostFact{
 		BaseHinter: hint.NewBaseHinter(PostFactHint),
 		token:      token,
