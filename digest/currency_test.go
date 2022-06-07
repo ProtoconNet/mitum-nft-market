@@ -1,3 +1,4 @@
+//go:build mongodb
 // +build mongodb
 
 package digest
@@ -17,7 +18,7 @@ type testCurrency struct {
 	baseTest
 }
 
-func (t *testCurrency) newCurrencyDesign(i int) currency.CurrencyDesign {
+func (t *testCurrency) newCurrencyDesign(i int) extensioncurrency.CurrencyDesign {
 	cid := currency.CurrencyID(fmt.Sprintf("BLK.%d", i))
 
 	var fee currency.Big
@@ -36,7 +37,7 @@ func (t *testCurrency) newCurrencyDesign(i int) currency.CurrencyDesign {
 		}
 	}
 
-	de := currency.NewCurrencyDesign(
+	de := extensioncurrency.NewCurrencyDesign(
 		currency.MustNewAmount(t.randomBig(), cid),
 		currency.NewTestAddress(),
 		currency.NewCurrencyPolicy(
@@ -50,11 +51,11 @@ func (t *testCurrency) newCurrencyDesign(i int) currency.CurrencyDesign {
 	return de
 }
 
-func (t *testCurrency) newCurrencyDesignState(de currency.CurrencyDesign, height base.Height) state.State {
-	st, err := state.NewStateV0(currency.StateKeyCurrencyDesign(de.Currency()), nil, height)
+func (t *testCurrency) newCurrencyDesignState(de extensioncurrency.CurrencyDesign, height base.Height) state.State {
+	st, err := state.NewStateV0(extensioncurrency.StateKeyCurrencyDesign(de.Currency()), nil, height)
 	t.NoError(err)
 
-	nst, err := currency.SetStateCurrencyDesignValue(st, de)
+	nst, err := extensioncurrency.SetStateCurrencyDesignValue(st, de)
 	t.NoError(err)
 
 	return nst
@@ -70,12 +71,12 @@ func (t *testCurrency) newHeight(excude base.Height) base.Height {
 }
 
 func (t *testCurrency) TestLoad() {
-	des := make([]currency.CurrencyDesign, 3)
+	des := make([]extensioncurrency.CurrencyDesign, 3)
 
 	mst := t.MongodbDatabase()
 
 	var sts []state.State
-	cids := map[currency.CurrencyID]currency.CurrencyDesign{}
+	cids := map[currency.CurrencyID]extensioncurrency.CurrencyDesign{}
 	for i := range des {
 		h0 := base.Height(t.randomBig().Int64() % 300)
 		de0 := t.newCurrencyDesign(i)
@@ -85,7 +86,7 @@ func (t *testCurrency) TestLoad() {
 		de1 := t.newCurrencyDesign(i)
 		st1 := t.newCurrencyDesignState(de1, h1)
 
-		var last currency.CurrencyDesign
+		var last extensioncurrency.CurrencyDesign
 		if h0 > h1 {
 			last = de0
 		} else {
@@ -100,7 +101,7 @@ func (t *testCurrency) TestLoad() {
 		t.NoError(mst.NewState(st))
 	}
 
-	cp := currency.NewCurrencyPool()
+	cp := extensioncurrency.NewCurrencyPool()
 
 	t.NoError(LoadCurrenciesFromDatabase(mst, base.NilHeight, func(sta state.State) (bool, error) {
 		t.NoError(cp.Set(sta))
