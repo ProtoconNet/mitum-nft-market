@@ -1,3 +1,4 @@
+//go:build mongodb
 // +build mongodb
 
 package digest
@@ -17,15 +18,15 @@ type testHandlerCurrency struct {
 }
 
 func (t *testHandlerCurrency) TestCurrencies() {
-	cp := currency.NewCurrencyPool()
+	cp := extensioncurrency.NewCurrencyPool()
 
-	var de currency.CurrencyDesign
+	var de extensioncurrency.CurrencyDesign
 	{
 
 		big := currency.NewBig(33)
 		cid := currency.CurrencyID("BLK")
 
-		de = currency.NewCurrencyDesign(
+		de = extensioncurrency.NewCurrencyDesign(
 			currency.MustNewAmount(big, cid),
 			currency.NewTestAddress(),
 			currency.NewCurrencyPolicy(
@@ -37,10 +38,10 @@ func (t *testHandlerCurrency) TestCurrencies() {
 			),
 		)
 
-		st, err := state.NewStateV0(currency.StateKeyCurrencyDesign(de.Currency()), nil, base.Height(33))
+		st, err := state.NewStateV0(extensioncurrency.StateKeyCurrencyDesign(de.Currency()), nil, base.Height(33))
 		t.NoError(err)
 
-		nst, err := currency.SetStateCurrencyDesignValue(st, de)
+		nst, err := extensioncurrency.SetStateCurrencyDesignValue(st, de)
 		t.NoError(err)
 
 		cp.Set(nst)
@@ -67,15 +68,15 @@ func (t *testHandlerCurrency) TestCurrencies() {
 }
 
 func (t *testHandlerCurrency) TestCurrency() {
-	cp := currency.NewCurrencyPool()
+	cp := extensioncurrency.NewCurrencyPool()
 
-	var de currency.CurrencyDesign
+	var de extensioncurrency.CurrencyDesign
 	{
 
 		big := currency.NewBig(33)
 		cid := currency.CurrencyID("BLK")
 
-		de = currency.NewCurrencyDesign(
+		de = extensioncurrency.NewCurrencyDesign(
 			currency.MustNewAmount(big, cid),
 			currency.NewTestAddress(),
 			currency.NewCurrencyPolicy(
@@ -90,7 +91,7 @@ func (t *testHandlerCurrency) TestCurrency() {
 		st, err := state.NewStateV0(currency.StateKeyCurrencyDesign(de.Currency()), nil, base.Height(33))
 		t.NoError(err)
 
-		nst, err := currency.SetStateCurrencyDesignValue(st, de)
+		nst, err := extensioncurrency.SetStateCurrencyDesignValue(st, de)
 		t.NoError(err)
 
 		cp.Set(nst)
@@ -113,7 +114,7 @@ func (t *testHandlerCurrency) TestCurrency() {
 
 	hinter, err := t.JSONEnc.Decode(hal.RawInterface())
 	t.NoError(err)
-	ude, ok := hinter.(currency.CurrencyDesign)
+	ude, ok := hinter.(extensioncurrency.CurrencyDesign)
 	t.True(ok)
 
 	t.compareCurrencyDesign(de, ude)

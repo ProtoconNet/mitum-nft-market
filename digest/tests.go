@@ -8,6 +8,7 @@ import (
 	"crypto/rand"
 	"math/big"
 
+	extensioncurrency "github.com/ProtoconNet/mitum-currency-extension/currency"
 	"github.com/spikeekips/mitum/base"
 	"github.com/spikeekips/mitum/base/block"
 	"github.com/spikeekips/mitum/base/key"
@@ -51,7 +52,7 @@ func (t *baseTest) SetupSuite() {
 	_ = t.Encs.TestAddHinter(currency.CreateAccountsItemMultiAmountsHinter)
 	_ = t.Encs.TestAddHinter(currency.CreateAccountsItemSingleAmountHinter)
 	_ = t.Encs.TestAddHinter(currency.CreateAccountsHinter)
-	_ = t.Encs.TestAddHinter(currency.CurrencyDesignHinter)
+	_ = t.Encs.TestAddHinter(extensioncurrency.CurrencyDesignHinter)
 	_ = t.Encs.TestAddHinter(currency.CurrencyPolicyUpdaterFactHinter)
 	_ = t.Encs.TestAddHinter(currency.CurrencyPolicyUpdaterHinter)
 	_ = t.Encs.TestAddHinter(currency.CurrencyRegisterFactHinter)
@@ -304,7 +305,7 @@ func (t *baseTest) newBlock(height base.Height, st storage.Database) block.Block
 	return blk
 }
 
-func (t *baseTest) compareCurrencyDesign(a, b currency.CurrencyDesign) {
+func (t *baseTest) compareCurrencyDesign(a, b extensioncurrency.CurrencyDesign) {
 	t.compareAmount(a.Amount, b.Amount)
 	t.True(a.GenesisAccount().Equal(a.GenesisAccount()))
 	t.Equal(a.Policy(), b.Policy())
