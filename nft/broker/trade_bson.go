@@ -13,11 +13,10 @@ func (fact TradeFact) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(
 		bsonenc.MergeBSONM(bsonenc.NewHintedDoc(fact.Hint()),
 			bson.M{
-				"hash":     fact.h,
-				"token":    fact.token,
-				"sender":   fact.sender,
-				"nft":      fact.nft,
-				"currency": fact.cid,
+				"hash":   fact.h,
+				"token":  fact.token,
+				"sender": fact.sender,
+				"items":  fact.items,
 			}))
 }
 
@@ -25,8 +24,7 @@ type TradeFactBSONUnpacker struct {
 	H  valuehash.Bytes     `bson:"hash"`
 	TK []byte              `bson:"token"`
 	SD base.AddressDecoder `bson:"sender"`
-	NF bson.Raw            `bson:"nft"`
-	CR string              `bson:"currency"`
+	IT bson.Raw            `bson:"items"`
 }
 
 func (fact *TradeFact) UnpackBSON(b []byte, enc *bsonenc.Encoder) error {
@@ -35,7 +33,7 @@ func (fact *TradeFact) UnpackBSON(b []byte, enc *bsonenc.Encoder) error {
 		return err
 	}
 
-	return fact.unpack(enc, ufact.H, ufact.TK, ufact.SD, ufact.NF, ufact.CR)
+	return fact.unpack(enc, ufact.H, ufact.TK, ufact.SD, ufact.IT)
 }
 
 func (op *Trade) UnpackBSON(b []byte, enc *bsonenc.Encoder) error {

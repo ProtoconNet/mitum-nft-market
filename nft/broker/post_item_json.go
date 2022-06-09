@@ -3,34 +3,74 @@ package broker
 import (
 	"encoding/json"
 
+	extensioncurrency "github.com/ProtoconNet/mitum-currency-extension/currency"
+	"github.com/ProtoconNet/mitum-nft/nft"
+
 	"github.com/spikeekips/mitum-currency/currency"
 	jsonenc "github.com/spikeekips/mitum/util/encoder/json"
 )
 
-type PostItemJSONPacker struct {
+type PostFormJSONPacker struct {
 	jsonenc.HintedHead
-	PO Posting             `json:"posting"`
-	CR currency.CurrencyID `json:"currency"`
+	OP PostOption      `json:"option"`
+	NF nft.NFTID       `json:"nft"`
+	CT PostCloseTime   `json:"closetime"`
+	PR currency.Amount `json:"price"`
 }
 
-func (it PostItem) MarshalJSON() ([]byte, error) {
+func (form PostForm) MarshalJSON() ([]byte, error) {
+	return jsonenc.Marshal(PostFormJSONPacker{
+		HintedHead: jsonenc.NewHintedHead(form.Hint()),
+		OP:         form.option,
+		NF:         form.n,
+		CT:         form.closeTime,
+		PR:         form.price,
+	})
+}
+
+type PostFormJSONUnpacker struct {
+	OP string          `json:"option"`
+	NF json.RawMessage `json:"nft"`
+	CT string          `json:"closetime"`
+	PR json.RawMessage `json:"price"`
+}
+
+func (form *PostForm) UnpackJSON(b []byte, enc *jsonenc.Encoder) error {
+	var ufo PostFormJSONUnpacker
+	if err := jsonenc.Unmarshal(b, &ufo); err != nil {
+		return err
+	}
+
+	return form.unpack(enc, ufo.OP, ufo.NF, ufo.CT, ufo.PR)
+}
+
+type PostItemJSONPacker struct {
+	jsonenc.HintedHead
+	BR extensioncurrency.ContractID `json:"broker"`
+	FO []PostForm                   `json:"forms"`
+	CR currency.CurrencyID          `json:"currency"`
+}
+
+func (it BasePostItem) MarshalJSON() ([]byte, error) {
 	return jsonenc.Marshal(PostItemJSONPacker{
 		HintedHead: jsonenc.NewHintedHead(it.Hint()),
-		PO:         it.posting,
+		BR:         it.broker,
+		FO:         it.forms,
 		CR:         it.cid,
 	})
 }
 
 type PostItemJSONUnpacker struct {
-	PO json.RawMessage `json:"posting"`
+	BR string          `json:"broker"`
+	FO json.RawMessage `json:"forms"`
 	CR string          `json:"currency"`
 }
 
-func (it *PostItem) UnpackJSON(b []byte, enc *jsonenc.Encoder) error {
-	var upn PostItemJSONUnpacker
-	if err := jsonenc.Unmarshal(b, &upn); err != nil {
+func (it *BasePostItem) UnpackJSON(b []byte, enc *jsonenc.Encoder) error {
+	var utn PostItemJSONUnpacker
+	if err := jsonenc.Unmarshal(b, &utn); err != nil {
 		return err
 	}
 
-	return it.unpack(enc, upn.PO, upn.CR)
+	return it.unpack(enc, utn.BR, utn.FO, utn.CR)
 }

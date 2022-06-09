@@ -1,7 +1,7 @@
 package broker
 
 import (
-	"github.com/ProtoconNet/mitum-nft-market/nft"
+	"github.com/ProtoconNet/mitum-nft/nft"
 	"github.com/spikeekips/mitum-currency/currency"
 	"github.com/spikeekips/mitum/base"
 	"github.com/spikeekips/mitum/util"
@@ -10,11 +10,13 @@ import (
 	"github.com/spikeekips/mitum/util/valuehash"
 )
 
+var MaxBidItems = 10
+
 var (
-	BidFactType   = hint.Type("mitum-nft-bid-operation-fact")
+	BidFactType   = hint.Type("mitum-nft-market-bid-operation-fact")
 	BidFactHint   = hint.NewHint(BidFactType, "v0.0.1")
 	BidFactHinter = BidFact{BaseHinter: hint.NewBaseHinter(BidFactHint)}
-	BidType       = hint.Type("mitum-nft-bid-operation")
+	BidType       = hint.Type("mitum-nft-market-bid-operation")
 	BidHint       = hint.NewHint(BidType, "v0.0.1")
 	BidHinter     = Bid{BaseOperation: operationHinter(BidHint)}
 )
@@ -24,17 +26,15 @@ type BidFact struct {
 	h      valuehash.Hash
 	token  []byte
 	sender base.Address
-	nft    nft.NFTID
-	amount currency.Amount
+	items  []BidItem
 }
 
-func NewBidFact(token []byte, sender base.Address, nft nft.NFTID, amount currency.Amount) BidFact {
+func NewBidFact(token []byte, sender base.Address, items []BidItem) BidFact {
 	fact := BidFact{
 		BaseHinter: hint.NewBaseHinter(BidFactHint),
 		token:      token,
 		sender:     sender,
-		nft:        nft,
-		amount:     amount,
+		items:      items,
 	}
 	fact.h = fact.GenerateHash()
 
@@ -50,11 +50,15 @@ func (fact BidFact) GenerateHash() valuehash.Hash {
 }
 
 func (fact BidFact) Bytes() []byte {
+	is := make([][]byte, len(fact.items))
+	for i := range fact.items {
+		is[i] = fact.items[i].Bytes()
+	}
+
 	return util.ConcatBytesSlice(
 		fact.token,
 		fact.sender.Bytes(),
-		fact.nft.Bytes(),
-		fact.amount.Bytes(),
+		util.ConcatBytesSlice(is...),
 	)
 }
 
@@ -67,21 +71,26 @@ func (fact BidFact) IsValid(b []byte) error {
 		return err
 	}
 
-	if len(fact.token) < 1 {
-		return isvalid.InvalidError.Errorf("empty token for BidFact")
+	if n := len(fact.items); n < 1 {
+		return isvalid.InvalidError.Errorf("empty items for BidFact")
+	} else if n > int(MaxBidItems) {
+		return isvalid.InvalidError.Errorf("items over allowed; %d > %d", n, MaxBidItems)
 	}
 
-	if err := isvalid.Check(
-		nil, false,
-		fact.h,
-		fact.sender,
-		fact.nft,
-		fact.amount); err != nil {
+	if err := fact.sender.IsValid(nil); err != nil {
 		return err
 	}
 
-	if !fact.amount.Big().OverZero() {
-		return isvalid.InvalidError.Errorf("amount should be over zero")
+	foundNFT := map[nft.NFTID]bool{}
+	for i := range fact.items {
+		if err := isvalid.Check(nil, false, fact.items[i]); err != nil {
+			return err
+		}
+
+		nft := fact.items[i].NFT()
+		if _, found := foundNFT[nft]; found {
+			return isvalid.InvalidError.Errorf("duplicated nft found; %s", nft)
+		}
 	}
 
 	if !fact.h.Equal(fact.GenerateHash()) {
@@ -99,23 +108,24 @@ func (fact BidFact) Sender() base.Address {
 	return fact.sender
 }
 
-func (fact BidFact) NFT() nft.NFTID {
-	return fact.nft
-}
-
-func (fact BidFact) Amount() currency.Amount {
-	return fact.amount
+func (fact BidFact) Items() []BidItem {
+	return fact.items
 }
 
 func (fact BidFact) Addresses() ([]base.Address, error) {
 	as := make([]base.Address, 1)
-
-	as[0] = fact.Sender()
-
+	as[0] = fact.sender
 	return as, nil
 }
 
 func (fact BidFact) Rebuild() BidFact {
+	items := make([]BidItem, len(fact.items))
+	for i := range fact.items {
+		it := fact.items[i]
+		items[i] = it.Rebuild()
+	}
+
+	fact.items = items
 	fact.h = fact.GenerateHash()
 
 	return fact
@@ -130,5 +140,6 @@ func NewBid(fact BidFact, fs []base.FactSign, memo string) (Bid, error) {
 	if err != nil {
 		return Bid{}, err
 	}
+
 	return Bid{BaseOperation: bo}, nil
 }

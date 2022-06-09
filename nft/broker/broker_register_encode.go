@@ -1,6 +1,8 @@
 package broker
 
 import (
+	extensioncurrency "github.com/ProtoconNet/mitum-currency-extension/currency"
+	"github.com/ProtoconNet/mitum-nft/nft"
 	"github.com/spikeekips/mitum-currency/currency"
 	"github.com/spikeekips/mitum/base"
 	"github.com/spikeekips/mitum/util"
@@ -8,13 +10,41 @@ import (
 	"github.com/spikeekips/mitum/util/valuehash"
 )
 
+func (form *BrokerRegisterForm) unpack(
+	enc encoder.Encoder,
+	bTarget base.AddressDecoder,
+	symbol string,
+	brokerage uint,
+	bReceiver base.AddressDecoder,
+	royalty bool,
+	uri string,
+) error {
+	target, err := bTarget.Encode(enc)
+	if err != nil {
+		return err
+	}
+	form.target = target
+
+	receiver, err := bReceiver.Encode(enc)
+	if err != nil {
+		return err
+	}
+	form.receiver = receiver
+
+	form.symbol = extensioncurrency.ContractID(symbol)
+	form.brokerage = nft.PaymentParameter(brokerage)
+	form.royalty = royalty
+	form.uri = nft.URI(uri)
+
+	return nil
+}
+
 func (fact *BrokerRegisterFact) unpack(
 	enc encoder.Encoder,
 	h valuehash.Hash,
 	token []byte,
 	bSender base.AddressDecoder,
-	bTarget base.AddressDecoder,
-	bPolicy []byte,
+	bForm []byte,
 	cid string,
 ) error {
 	sender, err := bSender.Encode(enc)
@@ -22,25 +52,19 @@ func (fact *BrokerRegisterFact) unpack(
 		return err
 	}
 
-	target, err := bTarget.Encode(enc)
-	if err != nil {
+	var form BrokerRegisterForm
+	if hinter, err := enc.Decode(bForm); err != nil {
 		return err
-	}
-
-	var policy BrokerPolicy
-	if hinter, err := enc.Decode(bPolicy); err != nil {
-		return err
-	} else if i, ok := hinter.(BrokerPolicy); !ok {
-		return util.WrongTypeError.Errorf("not BrokerPolicy; %T", hinter)
+	} else if i, ok := hinter.(BrokerRegisterForm); !ok {
+		return util.WrongTypeError.Errorf("not BrokerRegisterForm; %T", hinter)
 	} else {
-		policy = i
+		form = i
 	}
 
 	fact.h = h
 	fact.token = token
 	fact.sender = sender
-	fact.target = target
-	fact.policy = policy
+	fact.form = form
 	fact.cid = currency.CurrencyID(cid)
 
 	return nil

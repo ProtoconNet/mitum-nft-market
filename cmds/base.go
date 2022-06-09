@@ -11,6 +11,7 @@ import (
 	extensioncurrency "github.com/ProtoconNet/mitum-currency-extension/currency"
 	"github.com/ProtoconNet/mitum-nft-market/digest"
 	"github.com/ProtoconNet/mitum-nft-market/nft/broker"
+	"github.com/ProtoconNet/mitum-nft/nft/collection"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
 
@@ -162,6 +163,30 @@ func AttachProposalProcessor(
 		return nil, err
 	} else if _, err := opr.SetProcessor(extensioncurrency.WithdrawsHinter, extensioncurrency.NewWithdrawsProcessor(cp)); err != nil {
 		return nil, err
+	} else if _, err := opr.SetProcessor(collection.ApproveHinter, collection.NewApproveProcessor(cp)); err != nil {
+		return nil, err
+	} else if _, err := opr.SetProcessor(collection.DelegateHinter, collection.NewDelegateProcessor(cp)); err != nil {
+		return nil, err
+	} else if _, err := opr.SetProcessor(collection.CollectionRegisterHinter, collection.NewCollectionRegisterProcessor(cp)); err != nil {
+		return nil, err
+	} else if _, err := opr.SetProcessor(collection.MintHinter, collection.NewMintProcessor(cp)); err != nil {
+		return nil, err
+	} else if _, err := opr.SetProcessor(collection.TransferHinter, collection.NewTransferProcessor(cp)); err != nil {
+		return nil, err
+	} else if _, err := opr.SetProcessor(collection.BurnHinter, collection.NewBurnProcessor(cp)); err != nil {
+		return nil, err
+	} else if _, err := opr.SetProcessor(broker.BrokerRegisterHinter, broker.NewBrokerRegisterProcessor(cp)); err != nil {
+		return nil, err
+	} else if _, err := opr.SetProcessor(broker.PostHinter, broker.NewPostProcessor(cp)); err != nil {
+		return nil, err
+	} else if _, err := opr.SetProcessor(broker.UnpostHinter, broker.NewUnpostProcessor(cp)); err != nil {
+		return nil, err
+	} else if _, err := opr.SetProcessor(broker.TradeHinter, broker.NewTradeProcessor(cp)); err != nil {
+		return nil, err
+	} else if _, err := opr.SetProcessor(broker.BidHinter, broker.NewBidProcessor(cp)); err != nil {
+		return nil, err
+	} else if _, err := opr.SetProcessor(broker.SettleAuctionHinter, broker.NewSettleAuctionProcessor(cp)); err != nil {
+		return nil, err
 	}
 
 	threshold, err := base.NewThreshold(uint(len(suffrage.Nodes())), policy.ThresholdRatio())
@@ -223,6 +248,18 @@ func InitializeProposalProcessor(ctx context.Context, opr *broker.OperationProce
 		extensioncurrency.SuffrageInflationHinter,
 		extensioncurrency.CreateContractAccountsHinter,
 		extensioncurrency.WithdrawsHinter,
+		collection.ApproveHinter,
+		collection.DelegateHinter,
+		collection.CollectionRegisterHinter,
+		collection.MintHinter,
+		collection.TransferHinter,
+		collection.BurnHinter,
+		broker.BrokerRegisterHinter,
+		broker.PostHinter,
+		broker.UnpostHinter,
+		broker.TradeHinter,
+		broker.BidHinter,
+		broker.SettleAuctionHinter,
 	} {
 		if err := oprs.Add(hinter, opr); err != nil {
 			return ctx, err

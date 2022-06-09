@@ -13,29 +13,27 @@ func (fact UnpostFact) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(
 		bsonenc.MergeBSONM(bsonenc.NewHintedDoc(fact.Hint()),
 			bson.M{
-				"hash":     fact.h,
-				"token":    fact.token,
-				"sender":   fact.sender,
-				"nfts":     fact.nfts,
-				"currency": fact.cid,
+				"hash":   fact.h,
+				"token":  fact.token,
+				"sender": fact.sender,
+				"items":  fact.items,
 			}))
 }
 
-type UnpostNFTFactBSONUnpacker struct {
+type UnpostFactBSONUnpacker struct {
 	H  valuehash.Bytes     `bson:"hash"`
 	TK []byte              `bson:"token"`
 	SD base.AddressDecoder `bson:"sender"`
-	NS bson.Raw            `bson:"nfts"`
-	CR string              `bson:"currency"`
+	IT bson.Raw            `bson:"items"`
 }
 
 func (fact *UnpostFact) UnpackBSON(b []byte, enc *bsonenc.Encoder) error {
-	var ufact UnpostNFTFactBSONUnpacker
+	var ufact UnpostFactBSONUnpacker
 	if err := bson.Unmarshal(b, &ufact); err != nil {
 		return err
 	}
 
-	return fact.unpack(enc, ufact.H, ufact.TK, ufact.SD, ufact.NS, ufact.CR)
+	return fact.unpack(enc, ufact.H, ufact.TK, ufact.SD, ufact.IT)
 }
 
 func (op *Unpost) UnpackBSON(b []byte, enc *bsonenc.Encoder) error {

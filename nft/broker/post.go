@@ -1,6 +1,9 @@
 package broker
 
 import (
+	extensioncurrency "github.com/ProtoconNet/mitum-currency-extension/currency"
+	"github.com/ProtoconNet/mitum-nft/nft"
+	"github.com/ProtoconNet/mitum-nft/nft/collection"
 	"github.com/spikeekips/mitum-currency/currency"
 	"github.com/spikeekips/mitum/base"
 	"github.com/spikeekips/mitum/util"
@@ -9,16 +12,27 @@ import (
 	"github.com/spikeekips/mitum/util/valuehash"
 )
 
+var MaxPostItems = 10
+
+type PostItem interface {
+	hint.Hinter
+	isvalid.IsValider
+	collection.NFTsItem
+	Bytes() []byte
+	Broker() extensioncurrency.ContractID
+	Forms() []PostForm
+	Currency() currency.CurrencyID
+	Rebuild() PostItem
+}
+
 var (
-	PostFactType   = hint.Type("mitum-nft-post-operation-fact")
+	PostFactType   = hint.Type("mitum-nft-market-post-operation-fact")
 	PostFactHint   = hint.NewHint(PostFactType, "v0.0.1")
 	PostFactHinter = PostFact{BaseHinter: hint.NewBaseHinter(PostFactHint)}
-	PostType       = hint.Type("mitum-nft-post-operation")
+	PostType       = hint.Type("mitum-nft-market-post-operation")
 	PostHint       = hint.NewHint(PostType, "v0.0.1")
 	PostHinter     = Post{BaseOperation: operationHinter(PostHint)}
 )
-
-var MaxPostItems = 10
 
 type PostFact struct {
 	hint.BaseHinter
@@ -28,7 +42,7 @@ type PostFact struct {
 	items  []PostItem
 }
 
-func NewPostFact(token []byte, sender base.Address, items []PostItem, cid currency.CurrencyID) PostFact {
+func NewPostFact(token []byte, sender base.Address, items []PostItem) PostFact {
 	fact := PostFact{
 		BaseHinter: hint.NewBaseHinter(PostFactHint),
 		token:      token,
@@ -76,27 +90,33 @@ func (fact PostFact) IsValid(b []byte) error {
 		return isvalid.InvalidError.Errorf("items over allowed; %d > %d", n, MaxPostItems)
 	}
 
-	if err := isvalid.Check(nil, false, fact.sender); err != nil {
+	if err := fact.sender.IsValid(nil); err != nil {
 		return err
 	}
 
-	foundNFT := map[string]bool{}
+	foundBroker := map[extensioncurrency.ContractID]bool{}
+	foundNFT := map[nft.NFTID]bool{}
 	for i := range fact.items {
-		if err := isvalid.Check(nil, false, fact.items[i]); err != nil {
+		if err := fact.items[i].IsValid(nil); err != nil {
 			return err
 		}
 
-		nft := fact.items[i].NFT()
-
-		if err := nft.IsValid(nil); err != nil {
-			return err
+		if _, found := foundBroker[fact.items[i].Broker()]; found {
+			return isvalid.InvalidError.Errorf("duplicate broker found; %q", fact.items[i].Broker())
 		}
+		foundBroker[fact.items[i].Broker()] = true
 
-		if _, found := foundNFT[nft.String()]; found {
-			return isvalid.InvalidError.Errorf("duplicate nft found; %s", nft.String())
+		nfts := fact.items[i].NFTs()
+		for j := range nfts {
+			if err := nfts[j].IsValid(nil); err != nil {
+				return err
+			}
+
+			if _, found := foundNFT[nfts[j]]; found {
+				return isvalid.InvalidError.Errorf("duplicate nft found; %q", nfts[j])
+			}
+			foundNFT[nfts[j]] = true
 		}
-
-		foundNFT[nft.String()] = true
 	}
 
 	return nil

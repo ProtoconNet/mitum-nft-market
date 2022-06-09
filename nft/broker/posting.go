@@ -3,7 +3,8 @@ package broker
 import (
 	"regexp"
 
-	"github.com/ProtoconNet/mitum-nft-market/nft"
+	extensioncurrency "github.com/ProtoconNet/mitum-currency-extension/currency"
+	"github.com/ProtoconNet/mitum-nft/nft"
 	"github.com/spikeekips/mitum-currency/currency"
 	"github.com/spikeekips/mitum/base"
 	"github.com/spikeekips/mitum/util"
@@ -55,7 +56,7 @@ func (po PostOption) IsValid([]byte) error {
 }
 
 var (
-	BiddingType   = hint.Type("mitum-nft-bidding")
+	BiddingType   = hint.Type("mitum-nft-market-bidding")
 	BiddingHint   = hint.NewHint(BiddingType, "v0.0.1")
 	BiddingHinter = Bidding{BaseHinter: hint.NewBaseHinter(BiddingHint)}
 )
@@ -113,34 +114,33 @@ func (bidding Bidding) Amount() currency.Amount {
 }
 
 var (
-	PostingType   = hint.Type("mitum-nft-posting")
+	PostingType   = hint.Type("mitum-nft-market-posting")
 	PostingHint   = hint.NewHint(PostingType, "v0.0.1")
 	PostingHinter = Posting{BaseHinter: hint.NewBaseHinter(PostingHint)}
 )
 
 type Posting struct {
 	hint.BaseHinter
-	broker    nft.Symbol
+	active    bool
+	broker    extensioncurrency.ContractID
 	option    PostOption
 	nft       nft.NFTID
 	closeTime PostCloseTime
 	price     currency.Amount
-	biddings  []Bidding
 }
 
-func NewPosting(broker nft.Symbol, option PostOption, nft nft.NFTID, closeTime PostCloseTime, price currency.Amount, biddings []Bidding) Posting {
+func NewPosting(active bool, broker extensioncurrency.ContractID, option PostOption, nft nft.NFTID, closeTime PostCloseTime, price currency.Amount) Posting {
 	return Posting{
 		broker:    broker,
 		option:    option,
 		nft:       nft,
 		closeTime: closeTime,
 		price:     price,
-		biddings:  biddings,
 	}
 }
 
-func MustNewPosting(broker nft.Symbol, option PostOption, nft nft.NFTID, closeTime PostCloseTime, price currency.Amount, biddings []Bidding) Posting {
-	posting := NewPosting(broker, option, nft, closeTime, price, biddings)
+func MustNewPosting(active bool, broker extensioncurrency.ContractID, option PostOption, nft nft.NFTID, closeTime PostCloseTime, price currency.Amount) Posting {
+	posting := NewPosting(active, broker, option, nft, closeTime, price)
 
 	if err := posting.IsValid(nil); err != nil {
 		panic(err)
@@ -150,28 +150,20 @@ func MustNewPosting(broker nft.Symbol, option PostOption, nft nft.NFTID, closeTi
 }
 
 func (posting Posting) Bytes() []byte {
-	if posting.option == SellPostOption {
-		return util.ConcatBytesSlice(
-			posting.broker.Bytes(),
-			posting.option.Bytes(),
-			posting.nft.Bytes(),
-			posting.closeTime.Bytes(),
-			posting.price.Bytes(),
-		)
-	}
-
-	bs := make([][]byte, len(posting.biddings))
-	for i := range posting.biddings {
-		bs[i] = posting.biddings[i].Bytes()
+	ba := make([]byte, 1)
+	if posting.active {
+		ba[0] = 1
+	} else {
+		ba[0] = 0
 	}
 
 	return util.ConcatBytesSlice(
+		ba,
 		posting.broker.Bytes(),
 		posting.option.Bytes(),
 		posting.nft.Bytes(),
 		posting.closeTime.Bytes(),
 		posting.price.Bytes(),
-		util.ConcatBytesSlice(bs...),
 	)
 }
 
@@ -193,20 +185,14 @@ func (posting Posting) IsValid([]byte) error {
 		return isvalid.InvalidError.Errorf("invalid Posting; %w", err)
 	}
 
-	if posting.option == SellPostOption {
-		return nil
-	}
-
-	for i := range posting.biddings {
-		if err := posting.biddings[i].IsValid(nil); err != nil {
-			return err
-		}
-	}
-
 	return nil
 }
 
-func (posting Posting) Broker() nft.Symbol {
+func (posting Posting) Active() bool {
+	return posting.active
+}
+
+func (posting Posting) Broker() extensioncurrency.ContractID {
 	return posting.broker
 }
 

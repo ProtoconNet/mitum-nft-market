@@ -16,8 +16,7 @@ func (fact BidFact) MarshalBSON() ([]byte, error) {
 				"hash":   fact.h,
 				"token":  fact.token,
 				"sender": fact.sender,
-				"nft":    fact.nft,
-				"amount": fact.amount,
+				"items":  fact.items,
 			}))
 }
 
@@ -25,8 +24,7 @@ type BidFactBSONUnpacker struct {
 	H  valuehash.Bytes     `bson:"hash"`
 	TK []byte              `bson:"token"`
 	SD base.AddressDecoder `bson:"sender"`
-	NF bson.Raw            `bson:"nft"`
-	AM bson.Raw            `bson:"amount"`
+	IT bson.Raw            `bson:"items"`
 }
 
 func (fact *BidFact) UnpackBSON(b []byte, enc *bsonenc.Encoder) error {
@@ -35,7 +33,7 @@ func (fact *BidFact) UnpackBSON(b []byte, enc *bsonenc.Encoder) error {
 		return err
 	}
 
-	return fact.unpack(enc, ufact.H, ufact.TK, ufact.SD, ufact.NF, ufact.AM)
+	return fact.unpack(enc, ufact.H, ufact.TK, ufact.SD, ufact.IT)
 }
 
 func (op *Bid) UnpackBSON(b []byte, enc *bsonenc.Encoder) error {

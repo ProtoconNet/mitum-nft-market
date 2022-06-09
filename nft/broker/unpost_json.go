@@ -3,7 +3,6 @@ package broker
 import (
 	"encoding/json"
 
-	"github.com/ProtoconNet/mitum-nft-market/nft"
 	"github.com/spikeekips/mitum-currency/currency"
 	"github.com/spikeekips/mitum/base"
 	jsonenc "github.com/spikeekips/mitum/util/encoder/json"
@@ -12,11 +11,10 @@ import (
 
 type UnpostFactJSONPacker struct {
 	jsonenc.HintedHead
-	H  valuehash.Hash      `json:"hash"`
-	TK []byte              `json:"token"`
-	SD base.Address        `json:"sender"`
-	NS []nft.NFTID         `json:"nfts"`
-	CR currency.CurrencyID `json:"currency"`
+	H  valuehash.Hash `json:"hash"`
+	TK []byte         `json:"token"`
+	SD base.Address   `json:"sender"`
+	IT []UnpostItem   `json:"items"`
 }
 
 func (fact UnpostFact) MarshalJSON() ([]byte, error) {
@@ -25,8 +23,7 @@ func (fact UnpostFact) MarshalJSON() ([]byte, error) {
 		H:          fact.h,
 		TK:         fact.token,
 		SD:         fact.sender,
-		NS:         fact.nfts,
-		CR:         fact.cid,
+		IT:         fact.items,
 	})
 }
 
@@ -34,8 +31,7 @@ type UnpostFactJSONUnpacker struct {
 	H  valuehash.Bytes     `json:"hash"`
 	TK []byte              `json:"token"`
 	SD base.AddressDecoder `json:"sender"`
-	NS json.RawMessage     `json:"nfts"`
-	CR string              `json:"currency"`
+	IT json.RawMessage     `json:"items"`
 }
 
 func (fact *UnpostFact) UnpackJSON(b []byte, enc *jsonenc.Encoder) error {
@@ -44,7 +40,7 @@ func (fact *UnpostFact) UnpackJSON(b []byte, enc *jsonenc.Encoder) error {
 		return err
 	}
 
-	return fact.unpack(enc, ufact.H, ufact.TK, ufact.SD, ufact.NS, ufact.CR)
+	return fact.unpack(enc, ufact.H, ufact.TK, ufact.SD, ufact.IT)
 }
 
 func (op *Unpost) UnpackJSON(b []byte, enc *jsonenc.Encoder) error {
