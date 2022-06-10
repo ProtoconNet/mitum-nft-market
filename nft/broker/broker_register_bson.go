@@ -9,6 +9,37 @@ import (
 	"github.com/spikeekips/mitum/util/valuehash"
 )
 
+func (form BrokerRegisterForm) MarshalBSON() ([]byte, error) {
+	return bsonenc.Marshal(
+		bsonenc.MergeBSONM(bsonenc.NewHintedDoc(form.Hint()),
+			bson.M{
+				"target":    form.target,
+				"symbol":    form.symbol,
+				"brokerage": form.brokerage,
+				"receiver":  form.receiver,
+				"royalty":   form.royalty,
+				"uri":       form.uri,
+			}))
+}
+
+type BrokerRegisterFormBSONUnpacker struct {
+	TG base.AddressDecoder `bson:"target"`
+	SB string              `bson:"symbol"`
+	BR uint                `bson:"brokerage"`
+	RC base.AddressDecoder `bson:"receiver"`
+	RY bool                `bson:"royalty"`
+	UR string              `bson:"uri"`
+}
+
+func (form *BrokerRegisterForm) UnpackBSON(b []byte, enc *bsonenc.Encoder) error {
+	var uf BrokerRegisterFormBSONUnpacker
+	if err := bson.Unmarshal(b, &uf); err != nil {
+		return err
+	}
+
+	return form.unpack(enc, uf.TG, uf.SB, uf.BR, uf.RC, uf.RY, uf.UR)
+}
+
 func (fact BrokerRegisterFact) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(
 		bsonenc.MergeBSONM(bsonenc.NewHintedDoc(fact.Hint()),
@@ -16,8 +47,7 @@ func (fact BrokerRegisterFact) MarshalBSON() ([]byte, error) {
 				"hash":     fact.h,
 				"token":    fact.token,
 				"sender":   fact.sender,
-				"target":   fact.target,
-				"policy":   fact.policy,
+				"form":     fact.form,
 				"currency": fact.cid,
 			}))
 }
@@ -26,8 +56,7 @@ type BrokerRegisterFactBSONUnpacker struct {
 	H  valuehash.Bytes     `bson:"hash"`
 	TK []byte              `bson:"token"`
 	SD base.AddressDecoder `bson:"sender"`
-	TG base.AddressDecoder `bson:"target"`
-	PL bson.Raw            `bson:"policy"`
+	FO bson.Raw            `bson:"form"`
 	CR string              `bson:"currency"`
 }
 
@@ -37,7 +66,7 @@ func (fact *BrokerRegisterFact) UnpackBSON(b []byte, enc *bsonenc.Encoder) error
 		return err
 	}
 
-	return fact.unpack(enc, ufact.H, ufact.TK, ufact.SD, ufact.TG, ufact.PL, ufact.CR)
+	return fact.unpack(enc, ufact.H, ufact.TK, ufact.SD, ufact.FO, ufact.CR)
 }
 
 func (op *BrokerRegister) UnpackBSON(b []byte, enc *bsonenc.Encoder) error {

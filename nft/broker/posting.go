@@ -3,7 +3,8 @@ package broker
 import (
 	"regexp"
 
-	"github.com/ProtoconNet/mitum-nft-market/nft"
+	extensioncurrency "github.com/ProtoconNet/mitum-currency-extension/currency"
+	"github.com/ProtoconNet/mitum-nft/nft"
 	"github.com/spikeekips/mitum-currency/currency"
 	"github.com/spikeekips/mitum/base"
 	"github.com/spikeekips/mitum/util"
@@ -120,7 +121,7 @@ var (
 
 type Posting struct {
 	hint.BaseHinter
-	broker    nft.Symbol
+	broker    extensioncurrency.ContractID
 	option    PostOption
 	nft       nft.NFTID
 	closeTime PostCloseTime
@@ -128,7 +129,7 @@ type Posting struct {
 	biddings  []Bidding
 }
 
-func NewPosting(broker nft.Symbol, option PostOption, nft nft.NFTID, closeTime PostCloseTime, price currency.Amount, biddings []Bidding) Posting {
+func NewPosting(broker extensioncurrency.ContractID, option PostOption, nft nft.NFTID, closeTime PostCloseTime, price currency.Amount, biddings []Bidding) Posting {
 	return Posting{
 		broker:    broker,
 		option:    option,
@@ -139,7 +140,7 @@ func NewPosting(broker nft.Symbol, option PostOption, nft nft.NFTID, closeTime P
 	}
 }
 
-func MustNewPosting(broker nft.Symbol, option PostOption, nft nft.NFTID, closeTime PostCloseTime, price currency.Amount, biddings []Bidding) Posting {
+func MustNewPosting(broker extensioncurrency.ContractID, option PostOption, nft nft.NFTID, closeTime PostCloseTime, price currency.Amount, biddings []Bidding) Posting {
 	posting := NewPosting(broker, option, nft, closeTime, price, biddings)
 
 	if err := posting.IsValid(nil); err != nil {
@@ -206,7 +207,7 @@ func (posting Posting) IsValid([]byte) error {
 	return nil
 }
 
-func (posting Posting) Broker() nft.Symbol {
+func (posting Posting) Broker() extensioncurrency.ContractID {
 	return posting.broker
 }
 

@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	extensioncurrency "github.com/ProtoconNet/mitum-currency-extension/currency"
+	"github.com/ProtoconNet/mitum-nft/nft/collection"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/spikeekips/mitum-currency/currency"
@@ -150,7 +151,14 @@ func (opr *OperationProcessor) Process(op state.Processor) error {
 		*extensioncurrency.CurrencyPolicyUpdaterProcessor,
 		*extensioncurrency.SuffrageInflationProcessor,
 		*extensioncurrency.CreateContractAccountsProcessor,
-		*extensioncurrency.WithdrawsProcessor:
+		*extensioncurrency.WithdrawsProcessor,
+		*collection.DelegateProcessor,
+		*collection.ApproveProcessor,
+		*collection.CollectionRegisterProcessor,
+		*collection.MintProcessor,
+		*collection.TransferProcessor,
+		*collection.BurnProcessor,
+		*BrokerRegisterProcessor:
 		return opr.process(op)
 	case currency.Transfers,
 		currency.CreateAccounts,
@@ -159,7 +167,14 @@ func (opr *OperationProcessor) Process(op state.Processor) error {
 		extensioncurrency.CurrencyPolicyUpdater,
 		extensioncurrency.SuffrageInflation,
 		extensioncurrency.CreateContractAccounts,
-		extensioncurrency.Withdraws:
+		extensioncurrency.Withdraws,
+		collection.Delegate,
+		collection.Approve,
+		collection.CollectionRegister,
+		collection.Mint,
+		collection.Transfer,
+		collection.Burn,
+		BrokerRegister:
 		pr, err := opr.PreProcess(op)
 		if err != nil {
 			return err
@@ -183,6 +198,18 @@ func (opr *OperationProcessor) process(op state.Processor) error {
 	case *extensioncurrency.CreateContractAccountsProcessor:
 		sp = t
 	case *extensioncurrency.WithdrawsProcessor:
+		sp = t
+	case *collection.ApproveProcessor:
+		sp = t
+	case *collection.CollectionRegisterProcessor:
+		sp = t
+	case *collection.MintProcessor:
+		sp = t
+	case *collection.TransferProcessor:
+		sp = t
+	case *collection.BurnProcessor:
+		sp = t
+	case *BrokerRegisterProcessor:
 		sp = t
 	default:
 		return op.Process(opr.pool.Get, opr.pool.Set)
@@ -226,6 +253,27 @@ func (opr *OperationProcessor) checkDuplication(op state.Processor) error { // n
 		didtype = DuplicationTypeSender
 	case extensioncurrency.Withdraws:
 		did = t.Fact().(extensioncurrency.WithdrawsFact).Sender().String()
+		didtype = DuplicationTypeSender
+	case collection.Delegate:
+		did = t.Fact().(collection.DelegateFact).Sender().String()
+		didtype = DuplicationTypeSender
+	case collection.Approve:
+		did = t.Fact().(collection.ApproveFact).Sender().String()
+		didtype = DuplicationTypeSender
+	case collection.CollectionRegister:
+		did = t.Fact().(collection.CollectionRegisterFact).Sender().String()
+		didtype = DuplicationTypeSender
+	case collection.Mint:
+		did = t.Fact().(collection.MintFact).Sender().String()
+		didtype = DuplicationTypeSender
+	case collection.Transfer:
+		did = t.Fact().(collection.TransferFact).Sender().String()
+		didtype = DuplicationTypeSender
+	case collection.Burn:
+		did = t.Fact().(collection.BurnFact).Sender().String()
+		didtype = DuplicationTypeSender
+	case BrokerRegister:
+		did = t.Fact().(BrokerRegisterFact).Sender().String()
 		didtype = DuplicationTypeSender
 	default:
 		return nil
@@ -313,7 +361,14 @@ func (opr *OperationProcessor) getNewProcessor(op state.Processor) (state.Proces
 		extensioncurrency.CurrencyPolicyUpdater,
 		extensioncurrency.SuffrageInflation,
 		extensioncurrency.CreateContractAccounts,
-		extensioncurrency.Withdraws:
+		extensioncurrency.Withdraws,
+		collection.Delegate,
+		collection.Approve,
+		collection.CollectionRegister,
+		collection.Mint,
+		collection.Transfer,
+		collection.Burn,
+		BrokerRegister:
 
 		return nil, false, errors.Errorf("%T needs SetProcessor", t)
 	default:
