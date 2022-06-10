@@ -11,7 +11,6 @@ func (bp BrokerPolicy) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(bsonenc.MergeBSONM(
 		bsonenc.NewHintedDoc(bp.Hint()),
 		bson.M{
-			"symbol":    bp.symbol,
 			"brokerage": bp.brokerage,
 			"receiver":  bp.receiver,
 			"royalty":   bp.royalty,
@@ -20,17 +19,16 @@ func (bp BrokerPolicy) MarshalBSON() ([]byte, error) {
 }
 
 type BrokerPolicyBSONUnpacker struct {
-	SB string              `bson:"symbol"`
 	BR uint                `bson:"brokerage"`
 	RC base.AddressDecoder `bson:"receiver"`
 	RY bool                `bson:"royalty"`
 }
 
 func (bp BrokerPolicy) UnpackBSON(b []byte, enc *bsonenc.Encoder) error {
-	var ucp BrokerPolicyBSONUnpacker
-	if err := enc.Unmarshal(b, &ucp); err != nil {
+	var ubp BrokerPolicyBSONUnpacker
+	if err := enc.Unmarshal(b, &ubp); err != nil {
 		return err
 	}
 
-	return bp.unpack(enc, ucp.SB, ucp.BR, ucp.RC, ucp.RY)
+	return bp.unpack(enc, ubp.BR, ubp.RC, ubp.RY)
 }

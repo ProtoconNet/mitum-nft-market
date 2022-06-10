@@ -1,7 +1,8 @@
 package broker
 
 import (
-	"github.com/ProtoconNet/mitum-nft-market/nft"
+	extensioncurrency "github.com/ProtoconNet/mitum-currency-extension/currency"
+	"github.com/ProtoconNet/mitum-nft/nft"
 	"github.com/pkg/errors"
 	"github.com/spikeekips/mitum-currency/currency"
 	"github.com/spikeekips/mitum/base"
@@ -16,7 +17,7 @@ func (posting *Posting) unpack(
 	closetime string,
 	bPrice []byte,
 ) error {
-	posting.broker = nft.Symbol(broker)
+	posting.broker = extensioncurrency.ContractID(broker)
 	posting.option = PostOption(option)
 
 	if hinter, err := enc.Decode(bNFT); err != nil {

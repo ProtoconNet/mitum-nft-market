@@ -1,6 +1,8 @@
 package broker
 
 import (
+	extensioncurrency "github.com/ProtoconNet/mitum-currency-extension/currency"
+	"github.com/ProtoconNet/mitum-nft/nft"
 	"github.com/spikeekips/mitum-currency/currency"
 	"github.com/spikeekips/mitum/base"
 	"github.com/spikeekips/mitum/util"
@@ -10,10 +12,114 @@ import (
 )
 
 var (
-	BrokerRegisterFactType   = hint.Type("mitum-nft-broker-register-operation-fact")
+	BrokerRegisterFormType   = hint.Type("mitum-nft-market-broker-register-form")
+	BrokerRegisterFormHint   = hint.NewHint(BrokerRegisterFormType, "v0.0.1")
+	BrokerRegisterFormHinter = BrokerRegisterForm{BaseHinter: hint.NewBaseHinter(BrokerRegisterFormHint)}
+)
+
+type BrokerRegisterForm struct {
+	hint.BaseHinter
+	target    base.Address
+	symbol    extensioncurrency.ContractID
+	brokerage nft.PaymentParameter
+	receiver  base.Address
+	royalty   bool
+	uri       nft.URI
+}
+
+func NewBrokerRegisterForm(target base.Address, symbol extensioncurrency.ContractID, brokerage nft.PaymentParameter, receiver base.Address, royalty bool, uri nft.URI) BrokerRegisterForm {
+	return BrokerRegisterForm{
+		BaseHinter: hint.NewBaseHinter(BrokerRegisterFormHint),
+		target:     target,
+		symbol:     symbol,
+		brokerage:  brokerage,
+		royalty:    royalty,
+		receiver:   receiver,
+		uri:        uri,
+	}
+}
+
+func MustNewBrokerRegisterForm(target base.Address, symbol extensioncurrency.ContractID, brokerage nft.PaymentParameter, receiver base.Address, royalty bool, uri nft.URI, limit currency.Big) BrokerRegisterForm {
+	form := NewBrokerRegisterForm(target, symbol, brokerage, receiver, royalty, uri)
+	if err := form.IsValid(nil); err != nil {
+		panic(err)
+	}
+	return form
+}
+
+func (form BrokerRegisterForm) Bytes() []byte {
+	br := make([]byte, 1)
+	if form.royalty {
+		br[0] = 1
+	} else {
+		br[0] = 0
+	}
+
+	return util.ConcatBytesSlice(
+		form.target.Bytes(),
+		form.symbol.Bytes(),
+		form.brokerage.Bytes(),
+		form.receiver.Bytes(),
+		br,
+		form.uri.Bytes(),
+	)
+}
+
+func (form BrokerRegisterForm) Target() base.Address {
+	return form.target
+}
+
+func (form BrokerRegisterForm) Symbol() extensioncurrency.ContractID {
+	return form.symbol
+}
+
+func (form BrokerRegisterForm) Brokerage() nft.PaymentParameter {
+	return form.brokerage
+}
+
+func (form BrokerRegisterForm) Royalty() bool {
+	return form.royalty
+}
+
+func (form BrokerRegisterForm) Receiver() base.Address {
+	return form.receiver
+}
+
+func (form BrokerRegisterForm) Uri() nft.URI {
+	return form.uri
+}
+
+func (form BrokerRegisterForm) Addresses() ([]base.Address, error) {
+	as := make([]base.Address, 2)
+	as[0] = form.target
+	as[1] = form.receiver
+	return as, nil
+}
+
+func (form BrokerRegisterForm) IsValid([]byte) error {
+	if err := isvalid.Check(nil, false,
+		form.BaseHinter,
+		form.target,
+		form.symbol,
+		form.brokerage,
+		form.receiver,
+		form.uri,
+	); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (form BrokerRegisterForm) Rebuild() BrokerRegisterForm {
+	return form
+}
+
+var (
+	BrokerRegisterFactType   = hint.Type("mitum-nft-market-broker-register-operation-fact")
 	BrokerRegisterFactHint   = hint.NewHint(BrokerRegisterFactType, "v0.0.1")
 	BrokerRegisterFactHinter = BrokerRegisterFact{BaseHinter: hint.NewBaseHinter(BrokerRegisterFactHint)}
-	BrokerRegisterType       = hint.Type("mitum-nft-broker-register-operation")
+	BrokerRegisterType       = hint.Type("mitum-nft-market-broker-register-operation")
 	BrokerRegisterHint       = hint.NewHint(BrokerRegisterType, "v0.0.1")
 	BrokerRegisterHinter     = BrokerRegister{BaseOperation: operationHinter(BrokerRegisterHint)}
 )
@@ -23,18 +129,16 @@ type BrokerRegisterFact struct {
 	h      valuehash.Hash
 	token  []byte
 	sender base.Address
-	target base.Address
-	policy BrokerPolicy
+	form   BrokerRegisterForm
 	cid    currency.CurrencyID
 }
 
-func NewBrokerRegisterFact(token []byte, sender base.Address, target base.Address, policy BrokerPolicy, cid currency.CurrencyID) BrokerRegisterFact {
+func NewBrokerRegisterFact(token []byte, sender base.Address, form BrokerRegisterForm, cid currency.CurrencyID) BrokerRegisterFact {
 	fact := BrokerRegisterFact{
 		BaseHinter: hint.NewBaseHinter(BrokerRegisterFactHint),
 		token:      token,
 		sender:     sender,
-		target:     target,
-		policy:     policy,
+		form:       form,
 		cid:        cid,
 	}
 	fact.h = fact.GenerateHash()
@@ -54,8 +158,7 @@ func (fact BrokerRegisterFact) Bytes() []byte {
 	return util.ConcatBytesSlice(
 		fact.token,
 		fact.sender.Bytes(),
-		fact.target.Bytes(),
-		fact.policy.Bytes(),
+		fact.form.Bytes(),
 		fact.cid.Bytes(),
 	)
 }
@@ -77,8 +180,7 @@ func (fact BrokerRegisterFact) IsValid(b []byte) error {
 		nil, false,
 		fact.h,
 		fact.sender,
-		fact.target,
-		fact.policy,
+		fact.form,
 		fact.cid); err != nil {
 		return err
 	}
@@ -98,19 +200,20 @@ func (fact BrokerRegisterFact) Sender() base.Address {
 	return fact.sender
 }
 
-func (fact BrokerRegisterFact) Target() base.Address {
-	return fact.target
-}
-
-func (fact BrokerRegisterFact) Policy() BrokerPolicy {
-	return fact.policy
+func (fact BrokerRegisterFact) Form() BrokerRegisterForm {
+	return fact.form
 }
 
 func (fact BrokerRegisterFact) Addresses() ([]base.Address, error) {
-	as := make([]base.Address, 2)
+	as := []base.Address{}
 
-	as[0] = fact.sender
-	as[1] = fact.target
+	as = append(as, fact.sender)
+
+	if fas, err := fact.form.Addresses(); err != nil {
+		return nil, err
+	} else {
+		as = append(as, fas...)
+	}
 
 	return as, nil
 }
@@ -120,9 +223,7 @@ func (fact BrokerRegisterFact) Currency() currency.CurrencyID {
 }
 
 func (fact BrokerRegisterFact) Rebuild() BrokerRegisterFact {
-	policy := fact.policy.Rebuild()
-	fact.policy = policy
-
+	fact.form = fact.form.Rebuild()
 	fact.h = fact.GenerateHash()
 
 	return fact

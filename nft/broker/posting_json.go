@@ -3,7 +3,8 @@ package broker
 import (
 	"encoding/json"
 
-	"github.com/ProtoconNet/mitum-nft-market/nft"
+	extensioncurrency "github.com/ProtoconNet/mitum-currency-extension/currency"
+	"github.com/ProtoconNet/mitum-nft/nft"
 	"github.com/spikeekips/mitum-currency/currency"
 	"github.com/spikeekips/mitum/base"
 	jsonenc "github.com/spikeekips/mitum/util/encoder/json"
@@ -11,11 +12,11 @@ import (
 
 type PostingJSONPacker struct {
 	jsonenc.HintedHead
-	BR nft.Symbol      `json:"broker"`
-	OP PostOption      `json:"option"`
-	NF nft.NFTID       `json:"nft"`
-	CT PostCloseTime   `json:"closetime"`
-	PR currency.Amount `json:"price"`
+	BR extensioncurrency.ContractID `json:"broker"`
+	OP PostOption                   `json:"option"`
+	NF nft.NFTID                    `json:"nft"`
+	CT PostCloseTime                `json:"closetime"`
+	PR currency.Amount              `json:"price"`
 }
 
 func (posting Posting) MarshalJSON() ([]byte, error) {
