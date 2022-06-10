@@ -84,10 +84,10 @@ func (fact PostFact) IsValid(b []byte) error {
 		return err
 	}
 
-	if n := len(fact.items); n < 1 {
+	if l := len(fact.items); l < 1 {
 		return isvalid.InvalidError.Errorf("empty items for PostFact")
-	} else if n > MaxPostItems {
-		return isvalid.InvalidError.Errorf("items over allowed; %d > %d", n, MaxPostItems)
+	} else if l > MaxPostItems {
+		return isvalid.InvalidError.Errorf("items over allowed; %d > %d", l, MaxPostItems)
 	}
 
 	if err := fact.sender.IsValid(nil); err != nil {
@@ -101,21 +101,24 @@ func (fact PostFact) IsValid(b []byte) error {
 			return err
 		}
 
-		if _, found := foundBroker[fact.items[i].Broker()]; found {
+		broker := fact.items[i].Broker()
+		if _, found := foundBroker[broker]; found {
 			return isvalid.InvalidError.Errorf("duplicate broker found; %q", fact.items[i].Broker())
 		}
-		foundBroker[fact.items[i].Broker()] = true
+		foundBroker[broker] = true
 
 		nfts := fact.items[i].NFTs()
 		for j := range nfts {
-			if err := nfts[j].IsValid(nil); err != nil {
+
+			n := nfts[j]
+			if err := n.IsValid(nil); err != nil {
 				return err
 			}
 
-			if _, found := foundNFT[nfts[j]]; found {
-				return isvalid.InvalidError.Errorf("duplicate nft found; %q", nfts[j])
+			if _, found := foundNFT[n]; found {
+				return isvalid.InvalidError.Errorf("duplicate nft found; %q", n)
 			}
-			foundNFT[nfts[j]] = true
+			foundNFT[n] = true
 		}
 	}
 
@@ -136,9 +139,7 @@ func (fact PostFact) Items() []PostItem {
 
 func (fact PostFact) Addresses() ([]base.Address, error) {
 	as := make([]base.Address, 1)
-
-	as[0] = fact.Sender()
-
+	as[0] = fact.sender
 	return as, nil
 }
 

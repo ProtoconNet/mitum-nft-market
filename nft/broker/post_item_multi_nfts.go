@@ -35,8 +35,8 @@ func (it PostItemMultiNFTs) IsValid([]byte) error {
 		return err
 	}
 
-	if n := len(it.forms); n > MaxNFTsPostItemMultiNFTs {
-		return isvalid.InvalidError.Errorf("nfts over allowed; %d > %d", n, MaxNFTsPostItemMultiNFTs)
+	if l := len(it.forms); l > MaxNFTsPostItemMultiNFTs {
+		return isvalid.InvalidError.Errorf("nfts over allowed; %d > %d", l, MaxNFTsPostItemMultiNFTs)
 	}
 
 	return nil

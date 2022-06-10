@@ -29,6 +29,14 @@ func NewBidItem(n nft.NFTID, amount currency.Amount) BidItem {
 	}
 }
 
+func MustNewBidItem(n nft.NFTID, amount currency.Amount) BidItem {
+	item := NewBidItem(n, amount)
+	if err := item.IsValid(nil); err != nil {
+		panic(err)
+	}
+	return item
+}
+
 func (it BidItem) Bytes() []byte {
 	return util.ConcatBytesSlice(
 		it.n.Bytes(),
@@ -37,6 +45,10 @@ func (it BidItem) Bytes() []byte {
 }
 
 func (it BidItem) IsValid([]byte) error {
+	if !it.amount.Big().OverZero() {
+		return isvalid.InvalidError.Errorf("bid must be greater than zero")
+	}
+
 	if err := isvalid.Check(nil, false, it.BaseHinter, it.n, it.amount); err != nil {
 		return err
 	}

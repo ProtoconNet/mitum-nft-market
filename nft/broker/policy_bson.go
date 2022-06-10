@@ -25,10 +25,10 @@ type BrokerPolicyBSONUnpacker struct {
 }
 
 func (bp BrokerPolicy) UnpackBSON(b []byte, enc *bsonenc.Encoder) error {
-	var ucp BrokerPolicyBSONUnpacker
-	if err := enc.Unmarshal(b, &ucp); err != nil {
+	var ubp BrokerPolicyBSONUnpacker
+	if err := enc.Unmarshal(b, &ubp); err != nil {
 		return err
 	}
 
-	return bp.unpack(enc, ucp.BR, ucp.RC, ucp.RY)
+	return bp.unpack(enc, ubp.BR, ubp.RC, ubp.RY)
 }

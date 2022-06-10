@@ -56,7 +56,7 @@ func (form PostForm) IsValid([]byte) error {
 	if err := form.price.IsValid(nil); err != nil {
 		return err
 	} else if !form.price.Big().OverZero() {
-		return isvalid.InvalidError.Errorf("price should be over zero")
+		return isvalid.InvalidError.Errorf("price must be greater than zero")
 	}
 
 	if err := isvalid.Check(
@@ -136,11 +136,12 @@ func (it BasePostItem) IsValid([]byte) error {
 			return err
 		}
 
-		if _, found := foundNFT[it.forms[i].NFT()]; found {
-			return isvalid.InvalidError.Errorf("duplicate nft found; %q", it.forms[i].NFT())
+		n := it.forms[i].NFT()
+		if _, found := foundNFT[n]; found {
+			return isvalid.InvalidError.Errorf("duplicate nft found; %q", n)
 		}
 
-		foundNFT[it.forms[i].NFT()] = true
+		foundNFT[n] = true
 	}
 
 	return nil

@@ -22,9 +22,9 @@ type UnpostItemSingleNFT struct {
 	BaseUnpostItem
 }
 
-func NewUnpostItemSingleNFT(nftid nft.NFTID, cid currency.CurrencyID) UnpostItemSingleNFT {
+func NewUnpostItemSingleNFT(n nft.NFTID, cid currency.CurrencyID) UnpostItemSingleNFT {
 	return UnpostItemSingleNFT{
-		BaseUnpostItem: NewBaseUnpostItem(UnpostItemSingleNFTHint, []nft.NFTID{nftid}, cid),
+		BaseUnpostItem: NewBaseUnpostItem(UnpostItemSingleNFTHint, []nft.NFTID{n}, cid),
 	}
 }
 
@@ -33,8 +33,8 @@ func (it UnpostItemSingleNFT) IsValid([]byte) error {
 		return err
 	}
 
-	if n := len(it.nfts); n != 1 {
-		return isvalid.InvalidError.Errorf("only one nft allowed; %d", n)
+	if l := len(it.nfts); l != 1 {
+		return isvalid.InvalidError.Errorf("only one nft allowed; %d", l)
 	}
 
 	return nil

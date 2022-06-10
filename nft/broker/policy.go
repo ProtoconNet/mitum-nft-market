@@ -31,61 +31,60 @@ func NewBrokerPolicy(brokerage nft.PaymentParameter, receiver base.Address, roya
 }
 
 func MustNewBrokerPolicy(brokerage nft.PaymentParameter, receiver base.Address, royalty bool) BrokerPolicy {
-	broker := NewBrokerPolicy(brokerage, receiver, royalty)
+	policy := NewBrokerPolicy(brokerage, receiver, royalty)
 
-	if err := broker.IsValid(nil); err != nil {
+	if err := policy.IsValid(nil); err != nil {
 		panic(err)
 	}
 
-	return broker
+	return policy
 }
 
-func (broker BrokerPolicy) Bytes() []byte {
-	if broker.royalty {
-		return util.ConcatBytesSlice(
-			broker.brokerage.Bytes(),
-			broker.receiver.Bytes(),
-			[]byte{1},
-		)
+func (policy BrokerPolicy) Bytes() []byte {
+	br := make([]byte, 1)
+	if policy.royalty {
+		br[0] = 1
+	} else {
+		br[0] = 0
 	}
 
 	return util.ConcatBytesSlice(
-		broker.brokerage.Bytes(),
-		broker.receiver.Bytes(),
-		[]byte{0},
+		policy.brokerage.Bytes(),
+		policy.receiver.Bytes(),
+		br,
 	)
 }
 
-func (broker BrokerPolicy) IsValid([]byte) error {
+func (policy BrokerPolicy) IsValid([]byte) error {
 
 	if err := isvalid.Check(nil, false,
-		broker.BaseHinter,
-		broker.brokerage,
-		broker.receiver); err != nil {
+		policy.BaseHinter,
+		policy.brokerage,
+		policy.receiver); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (broker BrokerPolicy) Brokerage() nft.PaymentParameter {
-	return broker.brokerage
+func (policy BrokerPolicy) Brokerage() nft.PaymentParameter {
+	return policy.brokerage
 }
 
-func (broker BrokerPolicy) Receiver() base.Address {
-	return broker.receiver
+func (policy BrokerPolicy) Receiver() base.Address {
+	return policy.receiver
 }
 
-func (broker BrokerPolicy) Addresses() ([]base.Address, error) {
+func (policy BrokerPolicy) Addresses() ([]base.Address, error) {
 	as := make([]base.Address, 1)
-	as[0] = broker.receiver
+	as[0] = policy.receiver
 	return as, nil
 }
 
-func (broker BrokerPolicy) Royalty() bool {
-	return broker.royalty
+func (policy BrokerPolicy) Royalty() bool {
+	return policy.royalty
 }
 
-func (broker BrokerPolicy) Rebuild() BrokerPolicy {
-	return broker
+func (policy BrokerPolicy) Rebuild() BrokerPolicy {
+	return policy
 }

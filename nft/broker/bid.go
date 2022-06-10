@@ -71,10 +71,10 @@ func (fact BidFact) IsValid(b []byte) error {
 		return err
 	}
 
-	if n := len(fact.items); n < 1 {
+	if l := len(fact.items); l < 1 {
 		return isvalid.InvalidError.Errorf("empty items for BidFact")
-	} else if n > int(MaxBidItems) {
-		return isvalid.InvalidError.Errorf("items over allowed; %d > %d", n, MaxBidItems)
+	} else if l > int(MaxBidItems) {
+		return isvalid.InvalidError.Errorf("items over allowed; %d > %d", l, MaxBidItems)
 	}
 
 	if err := fact.sender.IsValid(nil); err != nil {
@@ -87,9 +87,9 @@ func (fact BidFact) IsValid(b []byte) error {
 			return err
 		}
 
-		nft := fact.items[i].NFT()
-		if _, found := foundNFT[nft]; found {
-			return isvalid.InvalidError.Errorf("duplicated nft found; %s", nft)
+		n := fact.items[i].NFT()
+		if _, found := foundNFT[n]; found {
+			return isvalid.InvalidError.Errorf("duplicated nft found; %q", n)
 		}
 	}
 

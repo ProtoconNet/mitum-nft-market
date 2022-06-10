@@ -12,20 +12,20 @@ import (
 
 func (form *BrokerRegisterForm) unpack(
 	enc encoder.Encoder,
-	bTarget base.AddressDecoder,
+	bt base.AddressDecoder,
 	symbol string,
 	brokerage uint,
-	bReceiver base.AddressDecoder,
+	br base.AddressDecoder,
 	royalty bool,
 	uri string,
 ) error {
-	target, err := bTarget.Encode(enc)
+	target, err := bt.Encode(enc)
 	if err != nil {
 		return err
 	}
 	form.target = target
 
-	receiver, err := bReceiver.Encode(enc)
+	receiver, err := br.Encode(enc)
 	if err != nil {
 		return err
 	}
@@ -43,17 +43,17 @@ func (fact *BrokerRegisterFact) unpack(
 	enc encoder.Encoder,
 	h valuehash.Hash,
 	token []byte,
-	bSender base.AddressDecoder,
-	bForm []byte,
+	bs base.AddressDecoder,
+	bf []byte,
 	cid string,
 ) error {
-	sender, err := bSender.Encode(enc)
+	sender, err := bs.Encode(enc)
 	if err != nil {
 		return err
 	}
 
 	var form BrokerRegisterForm
-	if hinter, err := enc.Decode(bForm); err != nil {
+	if hinter, err := enc.Decode(bf); err != nil {
 		return err
 	} else if i, ok := hinter.(BrokerRegisterForm); !ok {
 		return util.WrongTypeError.Errorf("not BrokerRegisterForm; %T", hinter)

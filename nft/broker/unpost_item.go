@@ -47,16 +47,16 @@ func (it BaseUnpostItem) IsValid([]byte) error {
 		return isvalid.InvalidError.Errorf("empty nfts for BaseUnpostItem")
 	}
 
-	foundNFT := map[string]bool{}
+	foundNFT := map[nft.NFTID]bool{}
 	for i := range it.nfts {
 		if err := it.nfts[i].IsValid(nil); err != nil {
 			return err
 		}
-		nft := it.nfts[i].String()
-		if _, found := foundNFT[nft]; found {
-			return errors.Errorf("duplicated nft found; %s", nft)
+		n := it.nfts[i]
+		if _, found := foundNFT[n]; found {
+			return errors.Errorf("duplicated nft found; %s", n)
 		}
-		foundNFT[nft] = true
+		foundNFT[n] = true
 	}
 
 	return nil

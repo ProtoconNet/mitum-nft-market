@@ -81,10 +81,10 @@ func (fact SettleAuctionFact) IsValid(b []byte) error {
 		return err
 	}
 
-	if n := len(fact.items); n < 1 {
+	if l := len(fact.items); l < 1 {
 		return isvalid.InvalidError.Errorf("empty items for SettleAuctionFact")
-	} else if n > int(MaxSettleAuctionItems) {
-		return isvalid.InvalidError.Errorf("items over allowed; %d > %d", n, MaxSettleAuctionItems)
+	} else if l > int(MaxSettleAuctionItems) {
+		return isvalid.InvalidError.Errorf("items over allowed; %d > %d", l, MaxSettleAuctionItems)
 	}
 
 	if err := fact.sender.IsValid(nil); err != nil {
@@ -104,12 +104,12 @@ func (fact SettleAuctionFact) IsValid(b []byte) error {
 				return err
 			}
 
-			nft := nfts[j]
-			if _, found := foundNFT[nft]; found {
-				return isvalid.InvalidError.Errorf("duplicated nft found; %s", nft)
+			n := nfts[j]
+			if _, found := foundNFT[n]; found {
+				return isvalid.InvalidError.Errorf("duplicated nft found; %s", n)
 			}
 
-			foundNFT[nft] = true
+			foundNFT[n] = true
 		}
 	}
 

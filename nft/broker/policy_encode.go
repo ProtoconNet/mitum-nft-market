@@ -9,12 +9,12 @@ import (
 func (bp *BrokerPolicy) unpack(
 	enc encoder.Encoder,
 	brokerage uint,
-	bReceiver base.AddressDecoder,
+	br base.AddressDecoder,
 	royalty bool,
 ) error {
 	bp.brokerage = nft.PaymentParameter(brokerage)
 
-	receiver, err := bReceiver.Encode(enc)
+	receiver, err := br.Encode(enc)
 	if err != nil {
 		return err
 	}

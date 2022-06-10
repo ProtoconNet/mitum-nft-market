@@ -42,21 +42,21 @@ func (form *PostForm) unpack(
 func (it *BasePostItem) unpack(
 	enc encoder.Encoder,
 	broker string,
-	bForms []byte,
+	bfs []byte,
 	cid string,
 ) error {
 	it.broker = extensioncurrency.ContractID(broker)
 
-	hForms, err := enc.DecodeSlice(bForms)
+	hfs, err := enc.DecodeSlice(bfs)
 	if err != nil {
 		return err
 	}
 
-	forms := make([]PostForm, len(hForms))
-	for i := range hForms {
-		j, ok := hForms[i].(PostForm)
+	forms := make([]PostForm, len(hfs))
+	for i := range hfs {
+		j, ok := hfs[i].(PostForm)
 		if !ok {
-			return util.WrongTypeError.Errorf("not PostForm; %T", hForms[i])
+			return util.WrongTypeError.Errorf("not PostForm; %T", hfs[i])
 		}
 		forms[i] = j
 	}

@@ -35,8 +35,8 @@ func (it SettleAuctionItemMultiNFTs) IsValid([]byte) error {
 		return err
 	}
 
-	if n := len(it.nfts); n > MaxNFTsSettleAuctionItemMultiNFTs {
-		return isvalid.InvalidError.Errorf("nfts over allowed; %d > %d", n, MaxNFTsSettleAuctionItemMultiNFTs)
+	if l := len(it.nfts); l > MaxNFTsSettleAuctionItemMultiNFTs {
+		return isvalid.InvalidError.Errorf("nfts over allowed; %d > %d", l, MaxNFTsSettleAuctionItemMultiNFTs)
 	}
 
 	return nil

@@ -124,23 +124,23 @@ type Posting struct {
 	active    bool
 	broker    extensioncurrency.ContractID
 	option    PostOption
-	nft       nft.NFTID
+	n         nft.NFTID
 	closeTime PostCloseTime
 	price     currency.Amount
 }
 
-func NewPosting(active bool, broker extensioncurrency.ContractID, option PostOption, nft nft.NFTID, closeTime PostCloseTime, price currency.Amount) Posting {
+func NewPosting(active bool, broker extensioncurrency.ContractID, option PostOption, n nft.NFTID, closeTime PostCloseTime, price currency.Amount) Posting {
 	return Posting{
 		broker:    broker,
 		option:    option,
-		nft:       nft,
+		n:         n,
 		closeTime: closeTime,
 		price:     price,
 	}
 }
 
-func MustNewPosting(active bool, broker extensioncurrency.ContractID, option PostOption, nft nft.NFTID, closeTime PostCloseTime, price currency.Amount) Posting {
-	posting := NewPosting(active, broker, option, nft, closeTime, price)
+func MustNewPosting(active bool, broker extensioncurrency.ContractID, option PostOption, n nft.NFTID, closeTime PostCloseTime, price currency.Amount) Posting {
+	posting := NewPosting(active, broker, option, n, closeTime, price)
 
 	if err := posting.IsValid(nil); err != nil {
 		panic(err)
@@ -161,7 +161,7 @@ func (posting Posting) Bytes() []byte {
 		ba,
 		posting.broker.Bytes(),
 		posting.option.Bytes(),
-		posting.nft.Bytes(),
+		posting.n.Bytes(),
 		posting.closeTime.Bytes(),
 		posting.price.Bytes(),
 	)
@@ -171,7 +171,7 @@ func (posting Posting) IsValid([]byte) error {
 	if err := posting.price.IsValid(nil); err != nil {
 		return err
 	} else if !posting.price.Big().OverZero() {
-		return isvalid.InvalidError.Errorf("price should be over zero")
+		return isvalid.InvalidError.Errorf("price must be greater than zero")
 	}
 
 	if err := isvalid.Check(
@@ -179,7 +179,7 @@ func (posting Posting) IsValid([]byte) error {
 		posting.BaseHinter,
 		posting.broker,
 		posting.option,
-		posting.nft,
+		posting.n,
 		posting.closeTime,
 	); err != nil {
 		return isvalid.InvalidError.Errorf("invalid Posting; %w", err)
@@ -201,7 +201,7 @@ func (posting Posting) Option() PostOption {
 }
 
 func (posting Posting) NFT() nft.NFTID {
-	return posting.nft
+	return posting.n
 }
 
 func (posting Posting) CloseTime() PostCloseTime {

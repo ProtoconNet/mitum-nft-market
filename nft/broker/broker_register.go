@@ -56,11 +56,11 @@ func (form BrokerRegisterForm) Bytes() []byte {
 	}
 
 	return util.ConcatBytesSlice(
-		br,
 		form.target.Bytes(),
 		form.symbol.Bytes(),
 		form.brokerage.Bytes(),
 		form.receiver.Bytes(),
+		br,
 		form.uri.Bytes(),
 	)
 }
@@ -89,9 +89,11 @@ func (form BrokerRegisterForm) Uri() nft.URI {
 	return form.uri
 }
 
-func (form BrokerRegisterForm) Addresses() []base.Address {
-	as := []base.Address{form.target}
-	return as
+func (form BrokerRegisterForm) Addresses() ([]base.Address, error) {
+	as := make([]base.Address, 2)
+	as[0] = form.target
+	as[1] = form.receiver
+	return as, nil
 }
 
 func (form BrokerRegisterForm) IsValid([]byte) error {
@@ -203,10 +205,15 @@ func (fact BrokerRegisterFact) Form() BrokerRegisterForm {
 }
 
 func (fact BrokerRegisterFact) Addresses() ([]base.Address, error) {
-	as := make([]base.Address, 2)
+	as := make([]base.Address, 3)
 
 	as[0] = fact.sender
-	as = append(as, fact.form.Target())
+
+	if fas, err := fact.form.Addresses(); err != nil {
+		return nil, err
+	} else {
+		as = append(as, fas...)
+	}
 
 	return as, nil
 }
@@ -216,9 +223,7 @@ func (fact BrokerRegisterFact) Currency() currency.CurrencyID {
 }
 
 func (fact BrokerRegisterFact) Rebuild() BrokerRegisterFact {
-	policy := fact.form.Rebuild()
-	fact.form = policy
-
+	fact.form = fact.form.Rebuild()
 	fact.h = fact.GenerateHash()
 
 	return fact

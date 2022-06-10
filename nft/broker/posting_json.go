@@ -26,7 +26,7 @@ func (posting Posting) MarshalJSON() ([]byte, error) {
 		AC:         posting.active,
 		BR:         posting.broker,
 		OP:         posting.option,
-		NF:         posting.nft,
+		NF:         posting.n,
 		CT:         posting.closeTime,
 		PR:         posting.price,
 	})

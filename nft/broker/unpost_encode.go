@@ -11,15 +11,15 @@ func (fact *UnpostFact) unpack(
 	enc encoder.Encoder,
 	h valuehash.Hash,
 	token []byte,
-	bSender base.AddressDecoder,
-	bItems []byte,
+	bs base.AddressDecoder,
+	bits []byte,
 ) error {
-	sender, err := bSender.Encode(enc)
+	sender, err := bs.Encode(enc)
 	if err != nil {
 		return err
 	}
 
-	hits, err := enc.DecodeSlice(bItems)
+	hits, err := enc.DecodeSlice(bits)
 	if err != nil {
 		return err
 	}

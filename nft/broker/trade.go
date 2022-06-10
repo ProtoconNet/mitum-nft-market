@@ -71,10 +71,10 @@ func (fact TradeFact) IsValid(b []byte) error {
 		return err
 	}
 
-	if n := len(fact.items); n < 1 {
+	if l := len(fact.items); l < 1 {
 		return isvalid.InvalidError.Errorf("empty items for TradeFact")
-	} else if n > int(MaxTradeItems) {
-		return isvalid.InvalidError.Errorf("items over allowed; %d > %d", n, MaxTradeItems)
+	} else if l > int(MaxTradeItems) {
+		return isvalid.InvalidError.Errorf("items over allowed; %d > %d", l, MaxTradeItems)
 	}
 
 	if err := fact.sender.IsValid(nil); err != nil {

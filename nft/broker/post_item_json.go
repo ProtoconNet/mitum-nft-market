@@ -67,10 +67,10 @@ type PostItemJSONUnpacker struct {
 }
 
 func (it *BasePostItem) UnpackJSON(b []byte, enc *jsonenc.Encoder) error {
-	var utn PostItemJSONUnpacker
-	if err := jsonenc.Unmarshal(b, &utn); err != nil {
+	var uit PostItemJSONUnpacker
+	if err := jsonenc.Unmarshal(b, &uit); err != nil {
 		return err
 	}
 
-	return it.unpack(enc, utn.BR, utn.FO, utn.CR)
+	return it.unpack(enc, uit.BR, uit.FO, uit.CR)
 }

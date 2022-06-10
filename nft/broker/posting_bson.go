@@ -13,7 +13,7 @@ func (posting Posting) MarshalBSON() ([]byte, error) {
 			"active":    posting.active,
 			"broker":    posting.broker,
 			"option":    posting.option,
-			"nft":       posting.nft,
+			"nft":       posting.n,
 			"closetime": posting.closeTime,
 			"price":     posting.price,
 		}),

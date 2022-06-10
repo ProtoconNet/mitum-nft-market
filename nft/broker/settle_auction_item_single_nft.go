@@ -22,9 +22,9 @@ type SettleAuctionItemSingleNFT struct {
 	BaseSettleAuctionItem
 }
 
-func NewSettleAuctionItemSingleNFT(nftid nft.NFTID, cid currency.CurrencyID) SettleAuctionItemSingleNFT {
+func NewSettleAuctionItemSingleNFT(n nft.NFTID, cid currency.CurrencyID) SettleAuctionItemSingleNFT {
 	return SettleAuctionItemSingleNFT{
-		BaseSettleAuctionItem: NewBaseSettleAuctionItem(SettleAuctionItemSingleNFTHint, []nft.NFTID{nftid}, cid),
+		BaseSettleAuctionItem: NewBaseSettleAuctionItem(SettleAuctionItemSingleNFTHint, []nft.NFTID{n}, cid),
 	}
 }
 
