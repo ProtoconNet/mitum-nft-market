@@ -1,7 +1,6 @@
 package broker
 
 import (
-	extensioncurrency "github.com/ProtoconNet/mitum-currency-extension/currency"
 	"github.com/ProtoconNet/mitum-nft/nft"
 	"github.com/spikeekips/mitum-currency/currency"
 	"github.com/spikeekips/mitum/base"
@@ -82,18 +81,11 @@ func (fact PostFact) IsValid(b []byte) error {
 		return err
 	}
 
-	foundBroker := map[extensioncurrency.ContractID]bool{}
 	foundNFT := map[nft.NFTID]bool{}
 	for i := range fact.items {
 		if err := fact.items[i].IsValid(nil); err != nil {
 			return err
 		}
-
-		broker := fact.items[i].Broker()
-		if _, found := foundBroker[broker]; found {
-			return isvalid.InvalidError.Errorf("duplicate broker found; %q", fact.items[i].Broker())
-		}
-		foundBroker[broker] = true
 
 		n := fact.items[i].Form().NFT()
 		if err := n.IsValid(nil); err != nil {
