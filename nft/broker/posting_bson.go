@@ -10,6 +10,7 @@ func (posting Posting) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(bsonenc.MergeBSONM(
 		bsonenc.NewHintedDoc(posting.Hint()),
 		bson.M{
+			"active":    posting.active,
 			"broker":    posting.broker,
 			"option":    posting.option,
 			"nft":       posting.nft,
@@ -20,6 +21,7 @@ func (posting Posting) MarshalBSON() ([]byte, error) {
 }
 
 type PostingBSONUnpacker struct {
+	AC bool     `bson:"active"`
 	BR string   `bson:"broker"`
 	OP string   `bson:"option"`
 	NF bson.Raw `bson:"nft"`
@@ -33,7 +35,7 @@ func (posting *Posting) UnpackBSON(b []byte, enc *bsonenc.Encoder) error {
 		return err
 	}
 
-	return posting.unpack(enc, upt.BR, upt.OP, upt.NF, upt.CT, upt.PR)
+	return posting.unpack(enc, upt.AC, upt.BR, upt.OP, upt.NF, upt.CT, upt.PR)
 }
 
 func (bid Bidding) MarshalBSON() ([]byte, error) {

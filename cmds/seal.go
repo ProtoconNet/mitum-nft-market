@@ -20,6 +20,7 @@ type SealCommand struct {
 	TransferNFTs          collectioncmds.TransferCommand             `cmd:"" name:"transfer-nfts" help:"transfer nfts"`
 	Burn                  collectioncmds.BurnCommand                 `cmd:"" name:"burn" help:"burn nfts"`
 	BrokerRegister        BrokerRegisterCommand                      `cmd:"" name:"broker-register" help:"register broker to contract account"`
+	Post                  PostCommand                                `cmd:"" name:"post" help:"post nft on broker"`
 	CurrencyRegister      extensioncmds.CurrencyRegisterCommand      `cmd:"" name:"currency-register" help:"register new currency"`
 	CurrencyPolicyUpdater extensioncmds.CurrencyPolicyUpdaterCommand `cmd:"" name:"currency-policy-updater" help:"update currency policy"`  // revive:disable-line:line-length-limit
 	SuffrageInflation     currencycmds.SuffrageInflationCommand      `cmd:"" name:"suffrage-inflation" help:"suffrage inflation operation"` // revive:disable-line:line-length-limit
@@ -42,6 +43,7 @@ func NewSealCommand() SealCommand {
 		TransferNFTs:          collectioncmds.NewTransferCommand(),
 		Burn:                  collectioncmds.NewBurnCommand(),
 		BrokerRegister:        NewBrokerRegisterCommand(),
+		Post:                  NewPostCommand(),
 		CurrencyRegister:      extensioncmds.NewCurrencyRegisterCommand(),
 		CurrencyPolicyUpdater: extensioncmds.NewCurrencyPolicyUpdaterCommand(),
 		SuffrageInflation:     currencycmds.NewSuffrageInflationCommand(),

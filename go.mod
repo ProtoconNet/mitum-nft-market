@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/ProtoconNet/mitum-currency-extension v0.0.0-20220602071002-bd405e712e46
-	github.com/ProtoconNet/mitum-nft v0.0.0-20220609081956-0cd2429204cc
+	github.com/ProtoconNet/mitum-nft v0.0.0-20220617045845-3e35d469c31d
 	github.com/alecthomas/kong v0.5.0
 	github.com/bluele/gcache v0.0.2
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
@@ -13,6 +13,7 @@ require (
 	github.com/json-iterator/go v1.1.12
 	github.com/pkg/errors v0.9.1
 	github.com/rainycape/memcache v0.0.0-20150622160815-1031fa0ce2f2
+	github.com/relvacode/iso8601 v1.1.0
 	github.com/rs/zerolog v1.26.0
 	github.com/spikeekips/mitum v0.0.0-20220408034603-1a0b360e6244
 	github.com/spikeekips/mitum-currency v0.0.0-20220408034738-9478186fe086

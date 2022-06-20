@@ -12,6 +12,7 @@ import (
 
 type PostingJSONPacker struct {
 	jsonenc.HintedHead
+	AC bool                         `json:"active"`
 	BR extensioncurrency.ContractID `json:"broker"`
 	OP PostOption                   `json:"option"`
 	NF nft.NFTID                    `json:"nft"`
@@ -22,6 +23,7 @@ type PostingJSONPacker struct {
 func (posting Posting) MarshalJSON() ([]byte, error) {
 	return jsonenc.Marshal(PostingJSONPacker{
 		HintedHead: jsonenc.NewHintedHead(posting.Hint()),
+		AC:         posting.active,
 		BR:         posting.broker,
 		OP:         posting.option,
 		NF:         posting.nft,
@@ -31,6 +33,7 @@ func (posting Posting) MarshalJSON() ([]byte, error) {
 }
 
 type PostingJSONUnpacker struct {
+	AC bool            `json:"active"`
 	BR string          `json:"broker"`
 	OP string          `json:"option"`
 	NF json.RawMessage `json:"nft"`
@@ -44,7 +47,7 @@ func (cp *Posting) UnpackJSON(b []byte, enc *jsonenc.Encoder) error {
 		return err
 	}
 
-	return cp.unpack(enc, upt.BR, upt.OP, upt.NF, upt.CT, upt.PR)
+	return cp.unpack(enc, upt.AC, upt.BR, upt.OP, upt.NF, upt.CT, upt.PR)
 }
 
 type BiddingJSONPacker struct {
