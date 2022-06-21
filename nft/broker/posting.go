@@ -5,6 +5,7 @@ import (
 
 	extensioncurrency "github.com/ProtoconNet/mitum-currency-extension/currency"
 	"github.com/ProtoconNet/mitum-nft/nft"
+	"github.com/pkg/errors"
 	"github.com/spikeekips/mitum-currency/currency"
 	"github.com/spikeekips/mitum/base"
 	"github.com/spikeekips/mitum/util"
@@ -114,6 +115,137 @@ func (bidding Bidding) Amount() currency.Amount {
 	return bidding.amount
 }
 
+type PostDetails interface {
+	hint.Hinter
+	isvalid.IsValider
+	Bytes() []byte
+	Option() PostOption
+	NFT() nft.NFTID
+	Price() currency.Amount
+}
+
+var (
+	SellDetailsType   = hint.Type("mitum-nft-market-sell-details")
+	SellDetailsHint   = hint.NewHint(SellDetailsType, "v0.0.1")
+	SellDetailsHinter = SellDetails{BaseHinter: hint.NewBaseHinter(SellDetailsHint)}
+)
+
+type SellDetails struct {
+	hint.BaseHinter
+	nft   nft.NFTID
+	price currency.Amount
+}
+
+func NewSellDetails(n nft.NFTID, price currency.Amount) SellDetails {
+	return SellDetails{
+		BaseHinter: hint.NewBaseHinter(SellDetailsHint),
+		nft:        n,
+		price:      price,
+	}
+}
+
+func MustNewSellDetails(n nft.NFTID, price currency.Amount) SellDetails {
+	details := NewSellDetails(n, price)
+
+	if err := details.IsValid(nil); err != nil {
+		panic(err)
+	}
+
+	return details
+}
+
+func (d SellDetails) Option() PostOption {
+	return SellPostOption
+}
+
+func (d SellDetails) Bytes() []byte {
+	return util.ConcatBytesSlice(d.nft.Bytes(), d.price.Bytes())
+}
+
+func (d SellDetails) IsValid([]byte) error {
+	if err := isvalid.Check(nil, false, d.nft, d.price); err != nil {
+		return err
+	}
+
+	if !d.price.Big().OverZero() {
+		return errors.Errorf("price must be over zero; %q", d.price.Big())
+	}
+
+	return nil
+}
+
+func (d SellDetails) NFT() nft.NFTID {
+	return d.nft
+}
+
+func (d SellDetails) Price() currency.Amount {
+	return d.price
+}
+
+var (
+	AuctionDetailsType   = hint.Type("mitum-nft-market-auction-details")
+	AuctionDetailsHint   = hint.NewHint(AuctionDetailsType, "v0.0.1")
+	AuctionDetailsHinter = AuctionDetails{BaseHinter: hint.NewBaseHinter(AuctionDetailsHint)}
+)
+
+type AuctionDetails struct {
+	hint.BaseHinter
+	nft       nft.NFTID
+	closeTime PostCloseTime
+	price     currency.Amount
+}
+
+func NewAuctionDetails(n nft.NFTID, closeTime PostCloseTime, price currency.Amount) AuctionDetails {
+	return AuctionDetails{
+		BaseHinter: hint.NewBaseHinter(AuctionDetailsHint),
+		nft:        n,
+		closeTime:  closeTime,
+		price:      price,
+	}
+}
+
+func MustNewAuctionDetails(n nft.NFTID, closeTime PostCloseTime, price currency.Amount) AuctionDetails {
+	details := NewAuctionDetails(n, closeTime, price)
+
+	if err := details.IsValid(nil); err != nil {
+		panic(err)
+	}
+
+	return details
+}
+
+func (d AuctionDetails) Option() PostOption {
+	return AuctionPostOption
+}
+
+func (d AuctionDetails) Bytes() []byte {
+	return util.ConcatBytesSlice(d.nft.Bytes(), d.closeTime.Bytes(), d.price.Bytes())
+}
+
+func (d AuctionDetails) IsValid([]byte) error {
+	if err := isvalid.Check(nil, false, d.nft, d.closeTime, d.price); err != nil {
+		return err
+	}
+
+	if !d.price.Big().OverZero() {
+		return errors.Errorf("price must be over zero; %q", d.price.Big())
+	}
+
+	return nil
+}
+
+func (d AuctionDetails) CloseTime() PostCloseTime {
+	return d.closeTime
+}
+
+func (d AuctionDetails) NFT() nft.NFTID {
+	return d.nft
+}
+
+func (d AuctionDetails) Price() currency.Amount {
+	return d.price
+}
+
 var (
 	PostingType   = hint.Type("mitum-nft-market-posting")
 	PostingHint   = hint.NewHint(PostingType, "v0.0.1")
@@ -122,27 +254,23 @@ var (
 
 type Posting struct {
 	hint.BaseHinter
-	active    bool
-	broker    extensioncurrency.ContractID
-	option    PostOption
-	nft       nft.NFTID
-	closeTime PostCloseTime
-	price     currency.Amount
+	active  bool
+	broker  extensioncurrency.ContractID
+	option  PostOption
+	details PostDetails
 }
 
-func NewPosting(active bool, broker extensioncurrency.ContractID, option PostOption, n nft.NFTID, closeTime PostCloseTime, price currency.Amount) Posting {
+func NewPosting(active bool, broker extensioncurrency.ContractID, option PostOption, details PostDetails) Posting {
 	return Posting{
 		BaseHinter: hint.NewBaseHinter(PostingHint),
 		broker:     broker,
 		option:     option,
-		nft:        n,
-		closeTime:  closeTime,
-		price:      price,
+		details:    details,
 	}
 }
 
-func MustNewPosting(active bool, broker extensioncurrency.ContractID, option PostOption, n nft.NFTID, closeTime PostCloseTime, price currency.Amount) Posting {
-	posting := NewPosting(active, broker, option, n, closeTime, price)
+func MustNewPosting(active bool, broker extensioncurrency.ContractID, option PostOption, details PostDetails) Posting {
+	posting := NewPosting(active, broker, option, details)
 
 	if err := posting.IsValid(nil); err != nil {
 		panic(err)
@@ -163,28 +291,23 @@ func (posting Posting) Bytes() []byte {
 		ba,
 		posting.broker.Bytes(),
 		posting.option.Bytes(),
-		posting.nft.Bytes(),
-		posting.closeTime.Bytes(),
-		posting.price.Bytes(),
+		posting.details.Bytes(),
 	)
 }
 
 func (posting Posting) IsValid([]byte) error {
-	if err := posting.price.IsValid(nil); err != nil {
-		return err
-	} else if !posting.price.Big().OverZero() {
-		return isvalid.InvalidError.Errorf("price must be greater than zero")
-	}
-
 	if err := isvalid.Check(
 		nil, false,
 		posting.BaseHinter,
 		posting.broker,
 		posting.option,
-		posting.nft,
-		posting.closeTime,
+		posting.details,
 	); err != nil {
 		return isvalid.InvalidError.Errorf("invalid Posting; %w", err)
+	}
+
+	if posting.option != posting.details.Option() {
+		return isvalid.InvalidError.Errorf("different option; %q != %q", posting.option, posting.details.Option())
 	}
 
 	return nil
@@ -210,16 +333,8 @@ func (posting Posting) Option() PostOption {
 	return posting.option
 }
 
-func (posting Posting) NFT() nft.NFTID {
-	return posting.nft
-}
-
-func (posting Posting) CloseTime() PostCloseTime {
-	return posting.closeTime
-}
-
-func (posting Posting) Price() currency.Amount {
-	return posting.price
+func (posting Posting) Details() PostDetails {
+	return posting.details
 }
 
 func (posting Posting) Rebuild() Posting {

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 
 	extensioncurrency "github.com/ProtoconNet/mitum-currency-extension/currency"
-	"github.com/ProtoconNet/mitum-nft/nft"
 
 	"github.com/spikeekips/mitum-currency/currency"
 	jsonenc "github.com/spikeekips/mitum/util/encoder/json"
@@ -12,27 +11,21 @@ import (
 
 type PostFormJSONPacker struct {
 	jsonenc.HintedHead
-	OP PostOption      `json:"option"`
-	NF nft.NFTID       `json:"nft"`
-	CT PostCloseTime   `json:"closetime"`
-	PR currency.Amount `json:"price"`
+	OP PostOption  `json:"option"`
+	DE PostDetails `json:"details"`
 }
 
 func (form PostForm) MarshalJSON() ([]byte, error) {
 	return jsonenc.Marshal(PostFormJSONPacker{
 		HintedHead: jsonenc.NewHintedHead(form.Hint()),
 		OP:         form.option,
-		NF:         form.nft,
-		CT:         form.closeTime,
-		PR:         form.price,
+		DE:         form.details,
 	})
 }
 
 type PostFormJSONUnpacker struct {
 	OP string          `json:"option"`
-	NF json.RawMessage `json:"nft"`
-	CT string          `json:"closetime"`
-	PR json.RawMessage `json:"price"`
+	DE json.RawMessage `json:"details"`
 }
 
 func (form *PostForm) UnpackJSON(b []byte, enc *jsonenc.Encoder) error {
@@ -41,7 +34,7 @@ func (form *PostForm) UnpackJSON(b []byte, enc *jsonenc.Encoder) error {
 		return err
 	}
 
-	return form.unpack(enc, ufo.OP, ufo.NF, ufo.CT, ufo.PR)
+	return form.unpack(enc, ufo.OP, ufo.DE)
 }
 
 type PostItemJSONPacker struct {

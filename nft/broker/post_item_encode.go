@@ -2,7 +2,6 @@ package broker
 
 import (
 	extensioncurrency "github.com/ProtoconNet/mitum-currency-extension/currency"
-	"github.com/ProtoconNet/mitum-nft/nft"
 	"github.com/pkg/errors"
 
 	"github.com/spikeekips/mitum-currency/currency"
@@ -13,28 +12,16 @@ import (
 func (form *PostForm) unpack(
 	enc encoder.Encoder,
 	option string,
-	bn []byte,
-	closetime string,
-	bp []byte,
+	bd []byte,
 ) error {
 	form.option = PostOption(option)
 
-	if hinter, err := enc.Decode(bn); err != nil {
+	if hinter, err := enc.Decode(bd); err != nil {
 		return err
-	} else if n, ok := hinter.(nft.NFTID); !ok {
-		return util.WrongTypeError.Errorf("not NFTID; %T", hinter)
+	} else if details, ok := hinter.(PostDetails); !ok {
+		return util.WrongTypeError.Errorf("not PostDetails; %T", hinter)
 	} else {
-		form.nft = n
-	}
-
-	form.closeTime = PostCloseTime(closetime)
-
-	if hinter, err := enc.Decode(bp); err != nil {
-		return err
-	} else if am, ok := hinter.(currency.Amount); !ok {
-		return util.WrongTypeError.Errorf("not Amount; %T", hinter)
-	} else {
-		form.price = am
+		form.details = details
 	}
 
 	return nil

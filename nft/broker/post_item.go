@@ -2,7 +2,6 @@ package broker
 
 import (
 	extensioncurrency "github.com/ProtoconNet/mitum-currency-extension/currency"
-	"github.com/ProtoconNet/mitum-nft/nft"
 	"github.com/spikeekips/mitum-currency/currency"
 	"github.com/spikeekips/mitum/util"
 	"github.com/spikeekips/mitum/util/hint"
@@ -17,24 +16,20 @@ var (
 
 type PostForm struct {
 	hint.BaseHinter
-	option    PostOption
-	nft       nft.NFTID
-	closeTime PostCloseTime
-	price     currency.Amount
+	option  PostOption
+	details PostDetails
 }
 
-func NewPostForm(option PostOption, n nft.NFTID, closeTime PostCloseTime, price currency.Amount) PostForm {
+func NewPostForm(option PostOption, details PostDetails) PostForm {
 	return PostForm{
 		BaseHinter: hint.NewBaseHinter(PostFormHint),
 		option:     option,
-		nft:        n,
-		closeTime:  closeTime,
-		price:      price,
+		details:    details,
 	}
 }
 
-func MustNewPostForm(broker extensioncurrency.ContractID, option PostOption, n nft.NFTID, closeTime PostCloseTime, price currency.Amount) PostForm {
-	form := NewPostForm(option, n, closeTime, price)
+func MustNewPostForm(broker extensioncurrency.ContractID, option PostOption, details PostDetails) PostForm {
+	form := NewPostForm(option, details)
 
 	if err := form.IsValid(nil); err != nil {
 		panic(err)
@@ -46,27 +41,22 @@ func MustNewPostForm(broker extensioncurrency.ContractID, option PostOption, n n
 func (form PostForm) Bytes() []byte {
 	return util.ConcatBytesSlice(
 		form.option.Bytes(),
-		form.nft.Bytes(),
-		form.closeTime.Bytes(),
-		form.price.Bytes(),
+		form.details.Bytes(),
 	)
 }
 
 func (form PostForm) IsValid([]byte) error {
-	if err := form.price.IsValid(nil); err != nil {
-		return err
-	} else if !form.price.Big().OverZero() {
-		return isvalid.InvalidError.Errorf("price must be greater than zero")
-	}
-
 	if err := isvalid.Check(
 		nil, false,
 		form.BaseHinter,
 		form.option,
-		form.nft,
-		form.closeTime,
+		form.details,
 	); err != nil {
 		return isvalid.InvalidError.Errorf("invalid PostForm; %w", err)
+	}
+
+	if form.option != form.details.Option() {
+		return isvalid.InvalidError.Errorf("different option; %q != %q", form.option, form.details.Option())
 	}
 
 	return nil
@@ -76,16 +66,8 @@ func (form PostForm) Option() PostOption {
 	return form.option
 }
 
-func (form PostForm) NFT() nft.NFTID {
-	return form.nft
-}
-
-func (form PostForm) CloseTime() PostCloseTime {
-	return form.closeTime
-}
-
-func (form PostForm) Price() currency.Amount {
-	return form.price
+func (form PostForm) Details() PostDetails {
+	return form.details
 }
 
 func (form PostForm) Rebuild() PostForm {

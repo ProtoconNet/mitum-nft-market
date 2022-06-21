@@ -20,8 +20,8 @@ type PostCommand struct {
 	Currency  currencycmds.CurrencyIDFlag     `arg:"" name:"currency" help:"currency id" required:"true"`
 	BSymbol   string                          `arg:"" name:"broker" help:"broker symbol" required:"true"`
 	NFT       NFTIDFlag                       `arg:"" name:"nft" help:"target nft to bid (ex: \"<symbol>,<idx>\")" required:"true"`
-	CloseTime PostCloseTimeFlag               `arg:"" name:"closetime" help:"post close time (ex: \"yyyy-MM-ddTHH:mm:ssZ\")"`
 	Amount    currencycmds.CurrencyAmountFlag `arg:"" name:"price" help:"amount to bid (ex: \"<currency>,<amount>\")" required:"true"`
+	CloseTime PostCloseTimeFlag               `name:"closetime" help:"post close time (ex: \"yyyy-MM-ddTHH:mm:ssZ\")" optional:""`
 	Option    string                          `name:"option" help:"post option (sell|auction)" optional:""`
 	sender    base.Address
 	form      broker.PostForm
@@ -80,10 +80,14 @@ func (cmd *PostCommand) parseFlags() error {
 	} else if cmd.Option == broker.AuctionPostOption.String() {
 		option = broker.AuctionPostOption
 	} else {
-		option = broker.PostOption("")
+		return errors.Errorf("wrong option; %q", cmd.Option)
 	}
 	if err := option.IsValid(nil); err != nil {
 		return err
+	}
+
+	if option == broker.AuctionPostOption && len(cmd.CloseTime.s) < 1 {
+		return errors.Errorf("empty post close time")
 	}
 
 	n := nft.NewNFTID(cmd.NFT.collection, cmd.NFT.idx)
@@ -96,12 +100,18 @@ func (cmd *PostCommand) parseFlags() error {
 		return errors.Errorf("price should be over zero")
 	}
 
-	closeTime := broker.PostCloseTime(cmd.CloseTime.s)
-	if err := closeTime.IsValid(nil); err != nil {
-		return err
+	var details broker.PostDetails
+	if option == broker.SellPostOption {
+		details = broker.NewSellDetails(n, price)
+	} else {
+		closeTime := broker.PostCloseTime(cmd.CloseTime.s)
+		if err := closeTime.IsValid(nil); err != nil {
+			return err
+		}
+		details = broker.NewAuctionDetails(n, closeTime, price)
 	}
 
-	form := broker.NewPostForm(option, n, closeTime, price)
+	form := broker.NewPostForm(option, details)
 	if err := form.IsValid(nil); err != nil {
 		return err
 	}

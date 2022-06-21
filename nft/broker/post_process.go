@@ -62,7 +62,7 @@ func (ipp *PostItemProcessor) PreProcess(
 	}
 
 	form := ipp.item.Form()
-	nid := form.NFT()
+	nid := form.Details().NFT()
 	if st, err := existsState(collection.StateKeyNFT(nid), "nft", getState); err != nil {
 		return err
 	} else if n, err := collection.StateNFTValue(st); err != nil {
@@ -75,13 +75,16 @@ func (ipp *PostItemProcessor) PreProcess(
 		return errors.Errorf("dead collection; %q", nid.Collection())
 	}
 
-	if t, err := iso8601.ParseString(form.CloseTime().String()); err != nil {
-		return err
-	} else if ipp.lastConfirmedAt.After(t) || ipp.lastConfirmedAt.Equal(t) {
-		return errors.Errorf("closetime is faster than last confirmed_at; %q -> %q", form.CloseTime(), ipp.lastConfirmedAt.String())
+	if form.Option() == AuctionPostOption {
+		closeTime := form.Details().(AuctionDetails).CloseTime()
+		if t, err := iso8601.ParseString(closeTime.String()); err != nil {
+			return err
+		} else if ipp.lastConfirmedAt.After(t) || ipp.lastConfirmedAt.Equal(t) {
+			return errors.Errorf("closetime is faster than last confirmed_at; %q -> %q", closeTime, ipp.lastConfirmedAt.String())
+		}
 	}
 
-	posting := NewPosting(true, ipp.item.Broker(), form.Option(), nid, form.CloseTime(), form.Price())
+	posting := NewPosting(true, ipp.item.Broker(), form.Option(), form.Details())
 	if err := posting.IsValid(nil); err != nil {
 		return err
 	}
@@ -93,7 +96,7 @@ func (ipp *PostItemProcessor) PreProcess(
 		if pt, err := StatePostingValue(st); err != nil {
 			return err
 		} else if pt.Active() {
-			return errors.Errorf("posting already exists; %q, %q", ipp.item.Broker(), form.NFT())
+			return errors.Errorf("posting already exists; %q, %q", ipp.item.Broker(), form.Details().NFT())
 		} else {
 			ipp.posting = posting
 			ipp.pState = st

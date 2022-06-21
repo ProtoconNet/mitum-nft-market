@@ -87,7 +87,7 @@ func (fact PostFact) IsValid(b []byte) error {
 			return err
 		}
 
-		n := fact.items[i].Form().NFT()
+		n := fact.items[i].Form().Details().NFT()
 		if err := n.IsValid(nil); err != nil {
 			return err
 		}

@@ -10,18 +10,14 @@ func (form PostForm) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(
 		bsonenc.MergeBSONM(bsonenc.NewHintedDoc(form.Hint()),
 			bson.M{
-				"option":    form.option,
-				"nft":       form.nft,
-				"closetime": form.closeTime,
-				"price":     form.price,
+				"option":  form.option,
+				"details": form.details,
 			}))
 }
 
 type PostFormBSONUnpacker struct {
 	OP string   `bson:"option"`
-	NF bson.Raw `bson:"nft"`
-	CT string   `bson:"closetime"`
-	PR bson.Raw `bson:"price"`
+	DE bson.Raw `bson:"details"`
 }
 
 func (form *PostForm) UnpackBSON(b []byte, enc *bsonenc.Encoder) error {
@@ -30,7 +26,7 @@ func (form *PostForm) UnpackBSON(b []byte, enc *bsonenc.Encoder) error {
 		return err
 	}
 
-	return form.unpack(enc, ufo.OP, ufo.NF, ufo.CT, ufo.PR)
+	return form.unpack(enc, ufo.OP, ufo.DE)
 }
 
 func (it PostItem) MarshalBSON() ([]byte, error) {
