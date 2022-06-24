@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"os"
 	"strings"
-	"time"
 
 	extensioncurrency "github.com/ProtoconNet/mitum-currency-extension/currency"
 	"github.com/ProtoconNet/mitum-nft-market/digest"
@@ -25,7 +24,6 @@ import (
 	"github.com/spikeekips/mitum/launch/pm"
 	"github.com/spikeekips/mitum/launch/process"
 	"github.com/spikeekips/mitum/network"
-	"github.com/spikeekips/mitum/storage"
 	mongodbstorage "github.com/spikeekips/mitum/storage/mongodb"
 	"github.com/spikeekips/mitum/util"
 	jsonenc "github.com/spikeekips/mitum/util/encoder/json"
@@ -138,22 +136,7 @@ func HookInitializeProposalProcessor(ctx context.Context) (context.Context, erro
 		return ctx, err
 	}
 
-	var mst storage.Database
-	if err := process.LoadDatabaseContextValue(ctx, &mst); err != nil {
-		return ctx, err
-	}
-
-	var lastConfirmedAt time.Time
-	switch m, found, err := mst.LastManifest(); {
-	case err != nil:
-		return ctx, err
-	case !found:
-		return ctx, err
-	default:
-		lastConfirmedAt = m.ConfirmedAt()
-	}
-
-	opr, err := AttachProposalProcessor(lastConfirmedAt, policy, nodepool, suffrage, cp)
+	opr, err := AttachProposalProcessor(ctx, policy, nodepool, suffrage, cp)
 	if err != nil {
 		return ctx, err
 	}
@@ -164,12 +147,13 @@ func HookInitializeProposalProcessor(ctx context.Context) (context.Context, erro
 }
 
 func AttachProposalProcessor(
-	lastConfirmedAt time.Time,
+	ctx context.Context,
 	policy *isaac.LocalPolicy,
 	nodepool *network.Nodepool,
 	suffrage base.Suffrage,
 	cp *extensioncurrency.CurrencyPool,
 ) (*broker.OperationProcessor, error) {
+
 	opr := broker.NewOperationProcessor(cp)
 	if _, err := opr.SetProcessor(currency.CreateAccountsHinter, extensioncurrency.NewCreateAccountsProcessor(cp)); err != nil {
 		return nil, err
@@ -195,7 +179,7 @@ func AttachProposalProcessor(
 		return nil, err
 	} else if _, err := opr.SetProcessor(broker.BrokerRegisterHinter, broker.NewBrokerRegisterProcessor(cp)); err != nil {
 		return nil, err
-	} else if _, err := opr.SetProcessor(broker.PostHinter, broker.NewPostProcessor(lastConfirmedAt, cp)); err != nil {
+	} else if _, err := opr.SetProcessor(broker.PostHinter, broker.NewPostProcessor(ctx, cp)); err != nil {
 		return nil, err
 	}
 
