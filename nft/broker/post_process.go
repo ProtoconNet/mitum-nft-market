@@ -70,6 +70,18 @@ func (ipp *PostItemProcessor) PreProcess(
 		return err
 	} else if n, err := collection.StateNFTValue(st); err != nil {
 		return err
+	} else if n.Owner().String() == "" {
+		return errors.Errorf("dead nft; %q", nid)
+	} else if !n.Owner().Equal(ipp.sender) {
+		if err = checkExistsState(currency.StateKeyAccount(n.Owner()), getState); err != nil {
+			return err
+		} else if stt, err := existsState(collection.StateKeyAgents(n.Owner(), n.ID().Collection()), "agents", getState); err != nil {
+			return errors.Errorf("unathorized sender; %q", ipp.sender)
+		} else if box, err := collection.StateAgentsValue(stt); err != nil {
+			return err
+		} else if !box.Exists(ipp.sender) {
+			return errors.Errorf("unathorized sender; %q", ipp.sender)
+		}
 	} else if stt, err := existsState(collection.StateKeyCollection(n.ID().Collection()), "design", getState); err != nil {
 		return err
 	} else if design, err := collection.StateCollectionValue(stt); err != nil {
