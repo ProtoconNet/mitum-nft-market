@@ -263,6 +263,7 @@ type Posting struct {
 func NewPosting(active bool, broker extensioncurrency.ContractID, option PostOption, details PostDetails) Posting {
 	return Posting{
 		BaseHinter: hint.NewBaseHinter(PostingHint),
+		active:     active,
 		broker:     broker,
 		option:     option,
 		details:    details,

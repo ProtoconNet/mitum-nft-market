@@ -6,6 +6,7 @@ import (
 	"time"
 
 	extensioncurrency "github.com/ProtoconNet/mitum-currency-extension/currency"
+	"github.com/ProtoconNet/mitum-nft/nft"
 	"github.com/ProtoconNet/mitum-nft/nft/collection"
 	"github.com/pkg/errors"
 	"github.com/relvacode/iso8601"
@@ -64,30 +65,37 @@ func (ipp *PostItemProcessor) PreProcess(
 		return errors.Errorf("dead broker; %q", ipp.item.Broker())
 	}
 
+	var n nft.NFT
 	form := ipp.item.Form()
 	nid := form.Details().NFT()
 	if st, err := existsState(collection.StateKeyNFT(nid), "nft", getState); err != nil {
 		return err
-	} else if n, err := collection.StateNFTValue(st); err != nil {
+	} else if nv, err := collection.StateNFTValue(st); err != nil {
 		return err
-	} else if n.Owner().String() == "" {
+	} else if st, err = existsState(collection.StateKeyCollection(nv.ID().Collection()), "design", getState); err != nil {
+		return err
+	} else if design, err := collection.StateCollectionValue(st); err != nil {
+		return err
+	} else if !design.Active() {
+		return errors.Errorf("dead collection; %q", nid.Collection())
+	} else {
+		n = nv
+	}
+
+	if n.Owner().String() == "" {
 		return errors.Errorf("dead nft; %q", nid)
-	} else if !n.Owner().Equal(ipp.sender) {
-		if err = checkExistsState(currency.StateKeyAccount(n.Owner()), getState); err != nil {
+	}
+
+	if !n.Owner().Equal(ipp.sender) {
+		if err := checkExistsState(currency.StateKeyAccount(n.Owner()), getState); err != nil {
 			return err
-		} else if stt, err := existsState(collection.StateKeyAgents(n.Owner(), n.ID().Collection()), "agents", getState); err != nil {
+		} else if st, err := existsState(collection.StateKeyAgents(n.Owner(), n.ID().Collection()), "agents", getState); err != nil {
 			return errors.Errorf("unathorized sender; %q", ipp.sender)
-		} else if box, err := collection.StateAgentsValue(stt); err != nil {
+		} else if box, err := collection.StateAgentsValue(st); err != nil {
 			return err
 		} else if !box.Exists(ipp.sender) {
 			return errors.Errorf("unathorized sender; %q", ipp.sender)
 		}
-	} else if stt, err := existsState(collection.StateKeyCollection(n.ID().Collection()), "design", getState); err != nil {
-		return err
-	} else if design, err := collection.StateCollectionValue(stt); err != nil {
-		return err
-	} else if !design.Active() {
-		return errors.Errorf("dead collection; %q", nid.Collection())
 	}
 
 	if form.Option() == AuctionPostOption {
