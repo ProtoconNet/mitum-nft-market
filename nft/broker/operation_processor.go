@@ -158,6 +158,7 @@ func (opr *OperationProcessor) Process(op state.Processor) error {
 		*collection.MintProcessor,
 		*collection.TransferProcessor,
 		*collection.BurnProcessor,
+		*collection.SignProcessor,
 		*BrokerRegisterProcessor,
 		*PostProcessor:
 		return opr.process(op)
@@ -175,6 +176,7 @@ func (opr *OperationProcessor) Process(op state.Processor) error {
 		collection.Mint,
 		collection.Transfer,
 		collection.Burn,
+		collection.Sign,
 		BrokerRegister,
 		Post:
 		pr, err := opr.PreProcess(op)
@@ -210,6 +212,8 @@ func (opr *OperationProcessor) process(op state.Processor) error {
 	case *collection.TransferProcessor:
 		sp = t
 	case *collection.BurnProcessor:
+		sp = t
+	case *collection.SignProcessor:
 		sp = t
 	case *BrokerRegisterProcessor:
 		sp = t
@@ -275,6 +279,9 @@ func (opr *OperationProcessor) checkDuplication(op state.Processor) error { // n
 		didtype = DuplicationTypeSender
 	case collection.Burn:
 		did = t.Fact().(collection.BurnFact).Sender().String()
+		didtype = DuplicationTypeSender
+	case collection.Sign:
+		did = t.Fact().(collection.SignFact).Sender().String()
 		didtype = DuplicationTypeSender
 	case BrokerRegister:
 		did = t.Fact().(BrokerRegisterFact).Sender().String()
@@ -375,6 +382,7 @@ func (opr *OperationProcessor) getNewProcessor(op state.Processor) (state.Proces
 		collection.Mint,
 		collection.Transfer,
 		collection.Burn,
+		collection.Sign,
 		BrokerRegister,
 		Post:
 

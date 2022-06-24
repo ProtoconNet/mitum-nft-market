@@ -177,6 +177,8 @@ func AttachProposalProcessor(
 		return nil, err
 	} else if _, err := opr.SetProcessor(collection.BurnHinter, collection.NewBurnProcessor(cp)); err != nil {
 		return nil, err
+	} else if _, err := opr.SetProcessor(collection.SignHinter, collection.NewSignProcessor(cp)); err != nil {
+		return nil, err
 	} else if _, err := opr.SetProcessor(broker.BrokerRegisterHinter, broker.NewBrokerRegisterProcessor(cp)); err != nil {
 		return nil, err
 	} else if _, err := opr.SetProcessor(broker.PostHinter, broker.NewPostProcessor(ctx, cp)); err != nil {
@@ -248,6 +250,7 @@ func InitializeProposalProcessor(ctx context.Context, opr *broker.OperationProce
 		collection.MintHinter,
 		collection.TransferHinter,
 		collection.BurnHinter,
+		collection.SignHinter,
 		broker.BrokerRegisterHinter,
 		broker.PostHinter,
 	} {
