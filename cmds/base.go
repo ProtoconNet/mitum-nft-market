@@ -24,6 +24,7 @@ import (
 	"github.com/spikeekips/mitum/launch/pm"
 	"github.com/spikeekips/mitum/launch/process"
 	"github.com/spikeekips/mitum/network"
+	"github.com/spikeekips/mitum/storage"
 	mongodbstorage "github.com/spikeekips/mitum/storage/mongodb"
 	"github.com/spikeekips/mitum/util"
 	jsonenc "github.com/spikeekips/mitum/util/encoder/json"
@@ -154,6 +155,11 @@ func AttachProposalProcessor(
 	cp *extensioncurrency.CurrencyPool,
 ) (*broker.OperationProcessor, error) {
 
+	var mst storage.Database
+	if err := process.LoadDatabaseContextValue(ctx, &mst); err != nil {
+		return nil, err
+	}
+
 	opr := broker.NewOperationProcessor(cp)
 	if _, err := opr.SetProcessor(currency.CreateAccountsHinter, extensioncurrency.NewCreateAccountsProcessor(cp)); err != nil {
 		return nil, err
@@ -181,7 +187,7 @@ func AttachProposalProcessor(
 		return nil, err
 	} else if _, err := opr.SetProcessor(broker.BrokerRegisterHinter, broker.NewBrokerRegisterProcessor(cp)); err != nil {
 		return nil, err
-	} else if _, err := opr.SetProcessor(broker.PostHinter, broker.NewPostProcessor(ctx, cp)); err != nil {
+	} else if _, err := opr.SetProcessor(broker.PostHinter, broker.NewPostProcessor(mst, cp)); err != nil {
 		return nil, err
 	}
 

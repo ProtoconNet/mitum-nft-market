@@ -1,7 +1,6 @@
 package broker
 
 import (
-	"context"
 	"sync"
 	"time"
 
@@ -14,7 +13,6 @@ import (
 	"github.com/spikeekips/mitum/base"
 	"github.com/spikeekips/mitum/base/operation"
 	"github.com/spikeekips/mitum/base/state"
-	"github.com/spikeekips/mitum/launch/process"
 	"github.com/spikeekips/mitum/storage"
 	"github.com/spikeekips/mitum/util/valuehash"
 )
@@ -167,10 +165,10 @@ type PostProcessor struct {
 	ipps         []*PostItemProcessor
 	amountStates map[currency.CurrencyID]currency.AmountState
 	required     map[currency.CurrencyID][2]currency.Big
-	ctx          context.Context
+	mst          storage.Database
 }
 
-func NewPostProcessor(ctx context.Context, cp *extensioncurrency.CurrencyPool) currency.GetNewProcessor {
+func NewPostProcessor(mst storage.Database, cp *extensioncurrency.CurrencyPool) currency.GetNewProcessor {
 	return func(op state.Processor) (state.Processor, error) {
 		i, ok := op.(Post)
 		if !ok {
@@ -184,7 +182,7 @@ func NewPostProcessor(ctx context.Context, cp *extensioncurrency.CurrencyPool) c
 		opp.ipps = nil
 		opp.amountStates = nil
 		opp.required = nil
-		opp.ctx = ctx
+		opp.mst = mst
 
 		return opp, nil
 	}
@@ -212,13 +210,8 @@ func (opp *PostProcessor) PreProcess(
 		return nil, operation.NewBaseReasonError("invalid signing; %w", err)
 	}
 
-	var mst storage.Database
-	if err := process.LoadDatabaseContextValue(opp.ctx, &mst); err != nil {
-		return nil, err
-	}
-
 	var lastConfirmedAt time.Time
-	switch m, found, err := mst.LastManifest(); {
+	switch m, found, err := opp.mst.LastManifest(); {
 	case err != nil:
 		return nil, err
 	case !found:
@@ -294,7 +287,7 @@ func (opp *PostProcessor) Close() error {
 	opp.ipps = nil
 	opp.amountStates = nil
 	opp.required = nil
-	opp.ctx = nil
+	opp.mst = nil
 
 	PostProcessorPool.Put(opp)
 
