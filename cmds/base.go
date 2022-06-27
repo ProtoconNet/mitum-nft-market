@@ -137,7 +137,12 @@ func HookInitializeProposalProcessor(ctx context.Context) (context.Context, erro
 		return ctx, err
 	}
 
-	opr, err := AttachProposalProcessor(ctx, policy, nodepool, suffrage, cp)
+	var mst storage.Database
+	if err := process.LoadDatabaseContextValue(ctx, &mst); err != nil {
+		return nil, err
+	}
+
+	opr, err := AttachProposalProcessor(mst, policy, nodepool, suffrage, cp)
 	if err != nil {
 		return ctx, err
 	}
@@ -148,18 +153,12 @@ func HookInitializeProposalProcessor(ctx context.Context) (context.Context, erro
 }
 
 func AttachProposalProcessor(
-	ctx context.Context,
+	mst storage.Database,
 	policy *isaac.LocalPolicy,
 	nodepool *network.Nodepool,
 	suffrage base.Suffrage,
 	cp *extensioncurrency.CurrencyPool,
 ) (*broker.OperationProcessor, error) {
-
-	var mst storage.Database
-	if err := process.LoadDatabaseContextValue(ctx, &mst); err != nil {
-		return nil, err
-	}
-
 	opr := broker.NewOperationProcessor(cp)
 	if _, err := opr.SetProcessor(currency.CreateAccountsHinter, extensioncurrency.NewCreateAccountsProcessor(cp)); err != nil {
 		return nil, err
