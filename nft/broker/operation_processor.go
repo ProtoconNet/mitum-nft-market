@@ -178,7 +178,8 @@ func (opr *OperationProcessor) Process(op state.Processor) error {
 		collection.Burn,
 		collection.Sign,
 		BrokerRegister,
-		Post:
+		Post,
+		Unpost:
 		pr, err := opr.PreProcess(op)
 		if err != nil {
 			return err
@@ -218,6 +219,8 @@ func (opr *OperationProcessor) process(op state.Processor) error {
 	case *BrokerRegisterProcessor:
 		sp = t
 	case *PostProcessor:
+		sp = t
+	case *UnpostProcessor:
 		sp = t
 	default:
 		return op.Process(opr.pool.Get, opr.pool.Set)
@@ -288,6 +291,9 @@ func (opr *OperationProcessor) checkDuplication(op state.Processor) error { // n
 		didtype = DuplicationTypeSender
 	case Post:
 		did = t.Fact().(PostFact).Sender().String()
+		didtype = DuplicationTypeSender
+	case Unpost:
+		did = t.Fact().(UnpostFact).Sender().String()
 		didtype = DuplicationTypeSender
 	default:
 		return nil
@@ -384,7 +390,8 @@ func (opr *OperationProcessor) getNewProcessor(op state.Processor) (state.Proces
 		collection.Burn,
 		collection.Sign,
 		BrokerRegister,
-		Post:
+		Post,
+		Unpost:
 
 		return nil, false, errors.Errorf("%T needs SetProcessor", t)
 	default:

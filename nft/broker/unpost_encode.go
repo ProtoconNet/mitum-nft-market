@@ -1,8 +1,6 @@
 package broker
 
 import (
-	"github.com/ProtoconNet/mitum-nft/nft"
-	"github.com/spikeekips/mitum-currency/currency"
 	"github.com/spikeekips/mitum/base"
 	"github.com/spikeekips/mitum/util"
 	"github.com/spikeekips/mitum/util/encoder"
@@ -13,35 +11,32 @@ func (fact *UnpostFact) unpack(
 	enc encoder.Encoder,
 	h valuehash.Hash,
 	token []byte,
-	bSender base.AddressDecoder,
-	bNFTs []byte,
-	cid string,
+	bs base.AddressDecoder,
+	bits []byte,
 ) error {
-	sender, err := bSender.Encode(enc)
+	sender, err := bs.Encode(enc)
 	if err != nil {
 		return err
 	}
 
-	hNFTs, err := enc.DecodeSlice(bNFTs)
+	hits, err := enc.DecodeSlice(bits)
 	if err != nil {
 		return err
 	}
 
-	nfts := make([]nft.NFTID, len(hNFTs))
-	for i := range hNFTs {
-		j, ok := hNFTs[i].(nft.NFTID)
+	its := make([]UnpostItem, len(hits))
+	for i := range hits {
+		j, ok := hits[i].(UnpostItem)
 		if !ok {
-			return util.WrongTypeError.Errorf("not NFTID; %T", hNFTs[i])
+			return util.WrongTypeError.Errorf("not UnpostItem; %T", hits[i])
 		}
-
-		nfts[i] = j
+		its[i] = j
 	}
 
 	fact.h = h
 	fact.token = token
 	fact.sender = sender
-	fact.nfts = nfts
-	fact.cid = currency.CurrencyID(cid)
+	fact.items = its
 
 	return nil
 }
