@@ -188,6 +188,8 @@ func AttachProposalProcessor(
 		return nil, err
 	} else if _, err := opr.SetProcessor(broker.PostHinter, broker.NewPostProcessor(mst, cp)); err != nil {
 		return nil, err
+	} else if _, err := opr.SetProcessor(broker.UnpostHinter, broker.NewUnpostProcessor(mst, cp)); err != nil {
+		return nil, err
 	}
 
 	threshold, err := base.NewThreshold(uint(len(suffrage.Nodes())), policy.ThresholdRatio())
@@ -258,6 +260,7 @@ func InitializeProposalProcessor(ctx context.Context, opr *broker.OperationProce
 		collection.SignHinter,
 		broker.BrokerRegisterHinter,
 		broker.PostHinter,
+		broker.UnpostHinter,
 	} {
 		if err := oprs.Add(hinter, opr); err != nil {
 			return ctx, err

@@ -22,6 +22,7 @@ type SealCommand struct {
 	SignNFTs              collectioncmds.SignCommand                 `cmd:"" name:"sign-nfts" help:"sign nfts; creator | copyrighter"`
 	BrokerRegister        BrokerRegisterCommand                      `cmd:"" name:"broker-register" help:"register broker to contract account"`
 	Post                  PostCommand                                `cmd:"" name:"post" help:"post nft on broker"`
+	Unpost                UnpostCommand                              `cmd:"" name:"unpost" help:"unpost nft from broker" `
 	CurrencyRegister      extensioncmds.CurrencyRegisterCommand      `cmd:"" name:"currency-register" help:"register new currency"`
 	CurrencyPolicyUpdater extensioncmds.CurrencyPolicyUpdaterCommand `cmd:"" name:"currency-policy-updater" help:"update currency policy"`  // revive:disable-line:line-length-limit
 	SuffrageInflation     currencycmds.SuffrageInflationCommand      `cmd:"" name:"suffrage-inflation" help:"suffrage inflation operation"` // revive:disable-line:line-length-limit
@@ -46,6 +47,7 @@ func NewSealCommand() SealCommand {
 		SignNFTs:              collectioncmds.NewSignCommand(),
 		BrokerRegister:        NewBrokerRegisterCommand(),
 		Post:                  NewPostCommand(),
+		Unpost:                NewUnpostCommand(),
 		CurrencyRegister:      extensioncmds.NewCurrencyRegisterCommand(),
 		CurrencyPolicyUpdater: extensioncmds.NewCurrencyPolicyUpdaterCommand(),
 		SuffrageInflation:     currencycmds.NewSuffrageInflationCommand(),
