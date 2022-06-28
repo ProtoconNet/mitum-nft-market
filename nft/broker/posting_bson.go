@@ -6,25 +6,73 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
+func (details SellDetails) MarshalBSON() ([]byte, error) {
+	return bsonenc.Marshal(bsonenc.MergeBSONM(
+		bsonenc.NewHintedDoc(details.Hint()),
+		bson.M{
+			"nft":   details.nft,
+			"price": details.price,
+		}),
+	)
+}
+
+type SellDetailsBSONUnpacker struct {
+	NF bson.Raw `bson:"nft"`
+	PR bson.Raw `bson:"price"`
+}
+
+func (details *SellDetails) UnpackBSON(b []byte, enc *bsonenc.Encoder) error {
+	var ude SellDetailsBSONUnpacker
+	if err := enc.Unmarshal(b, &ude); err != nil {
+		return err
+	}
+
+	return details.unpack(enc, ude.NF, ude.PR)
+}
+
+func (details AuctionDetails) MarshalBSON() ([]byte, error) {
+	return bsonenc.Marshal(bsonenc.MergeBSONM(
+		bsonenc.NewHintedDoc(details.Hint()),
+		bson.M{
+			"nft":       details.nft,
+			"closetime": details.closeTime,
+			"price":     details.price,
+		}),
+	)
+}
+
+type AuctionDetailsBSONUnpacker struct {
+	NF bson.Raw `bson:"nft"`
+	CT string   `bson:"closetime"`
+	PR bson.Raw `bson:"price"`
+}
+
+func (details *AuctionDetails) UnpackBSON(b []byte, enc *bsonenc.Encoder) error {
+	var ude AuctionDetailsBSONUnpacker
+	if err := enc.Unmarshal(b, &ude); err != nil {
+		return err
+	}
+
+	return details.unpack(enc, ude.NF, ude.CT, ude.PR)
+}
+
 func (posting Posting) MarshalBSON() ([]byte, error) {
 	return bsonenc.Marshal(bsonenc.MergeBSONM(
 		bsonenc.NewHintedDoc(posting.Hint()),
 		bson.M{
-			"broker":    posting.broker,
-			"option":    posting.option,
-			"nft":       posting.nft,
-			"closetime": posting.closeTime,
-			"price":     posting.price,
+			"active":  posting.active,
+			"broker":  posting.broker,
+			"option":  posting.option,
+			"details": posting.details,
 		}),
 	)
 }
 
 type PostingBSONUnpacker struct {
+	AC bool     `bson:"active"`
 	BR string   `bson:"broker"`
 	OP string   `bson:"option"`
-	NF bson.Raw `bson:"nft"`
-	CT string   `bson:"closetime"`
-	PR bson.Raw `bson:"price"`
+	DE bson.Raw `bson:"details"`
 }
 
 func (posting *Posting) UnpackBSON(b []byte, enc *bsonenc.Encoder) error {
@@ -33,7 +81,7 @@ func (posting *Posting) UnpackBSON(b []byte, enc *bsonenc.Encoder) error {
 		return err
 	}
 
-	return posting.unpack(enc, upt.BR, upt.OP, upt.NF, upt.CT, upt.PR)
+	return posting.unpack(enc, upt.AC, upt.BR, upt.OP, upt.DE)
 }
 
 func (bid Bidding) MarshalBSON() ([]byte, error) {

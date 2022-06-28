@@ -24,6 +24,7 @@ import (
 	"github.com/spikeekips/mitum/launch/pm"
 	"github.com/spikeekips/mitum/launch/process"
 	"github.com/spikeekips/mitum/network"
+	"github.com/spikeekips/mitum/storage"
 	mongodbstorage "github.com/spikeekips/mitum/storage/mongodb"
 	"github.com/spikeekips/mitum/util"
 	jsonenc "github.com/spikeekips/mitum/util/encoder/json"
@@ -136,7 +137,12 @@ func HookInitializeProposalProcessor(ctx context.Context) (context.Context, erro
 		return ctx, err
 	}
 
-	opr, err := AttachProposalProcessor(policy, nodepool, suffrage, cp)
+	var mst storage.Database
+	if err := process.LoadDatabaseContextValue(ctx, &mst); err != nil {
+		return nil, err
+	}
+
+	opr, err := AttachProposalProcessor(mst, policy, nodepool, suffrage, cp)
 	if err != nil {
 		return ctx, err
 	}
@@ -147,6 +153,7 @@ func HookInitializeProposalProcessor(ctx context.Context) (context.Context, erro
 }
 
 func AttachProposalProcessor(
+	mst storage.Database,
 	policy *isaac.LocalPolicy,
 	nodepool *network.Nodepool,
 	suffrage base.Suffrage,
@@ -175,7 +182,11 @@ func AttachProposalProcessor(
 		return nil, err
 	} else if _, err := opr.SetProcessor(collection.BurnHinter, collection.NewBurnProcessor(cp)); err != nil {
 		return nil, err
+	} else if _, err := opr.SetProcessor(collection.SignHinter, collection.NewSignProcessor(cp)); err != nil {
+		return nil, err
 	} else if _, err := opr.SetProcessor(broker.BrokerRegisterHinter, broker.NewBrokerRegisterProcessor(cp)); err != nil {
+		return nil, err
+	} else if _, err := opr.SetProcessor(broker.PostHinter, broker.NewPostProcessor(mst, cp)); err != nil {
 		return nil, err
 	}
 
@@ -244,7 +255,9 @@ func InitializeProposalProcessor(ctx context.Context, opr *broker.OperationProce
 		collection.MintHinter,
 		collection.TransferHinter,
 		collection.BurnHinter,
+		collection.SignHinter,
 		broker.BrokerRegisterHinter,
+		broker.PostHinter,
 	} {
 		if err := oprs.Add(hinter, opr); err != nil {
 			return ctx, err

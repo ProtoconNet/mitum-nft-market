@@ -14,8 +14,8 @@ import (
 var (
 	Version = "v0.0.0"
 	options = []kong.Option{
-		kong.Name("mitum-currency"),
-		kong.Description("mitum-currency tool"),
+		kong.Name("mitum-nft-market"),
+		kong.Description("mitum-nft-market tool"),
 		currencycmds.KeyAddressVars,
 		currencycmds.SendVars,
 		mitumcmds.BlockDownloadVars,

@@ -10,32 +10,88 @@ import (
 	jsonenc "github.com/spikeekips/mitum/util/encoder/json"
 )
 
+type SellDetailsJSONPacker struct {
+	jsonenc.HintedHead
+	NF nft.NFTID       `json:"nft"`
+	PR currency.Amount `json:"price"`
+}
+
+func (details SellDetails) MarshalJSON() ([]byte, error) {
+	return jsonenc.Marshal(SellDetailsJSONPacker{
+		HintedHead: jsonenc.NewHintedHead(details.Hint()),
+		NF:         details.nft,
+		PR:         details.price,
+	})
+}
+
+type SellDetailsJSONUnpacker struct {
+	NF json.RawMessage `json:"nft"`
+	PR json.RawMessage `json:"price"`
+}
+
+func (details *SellDetails) UnpackJSON(b []byte, enc *jsonenc.Encoder) error {
+	var ude SellDetailsJSONUnpacker
+	if err := enc.Unmarshal(b, &ude); err != nil {
+		return err
+	}
+
+	return details.unpack(enc, ude.NF, ude.PR)
+}
+
+type AuctionDetailsJSONPacker struct {
+	jsonenc.HintedHead
+	NF nft.NFTID       `json:"nft"`
+	CT PostCloseTime   `json:"closetime"`
+	PR currency.Amount `json:"price"`
+}
+
+func (details AuctionDetails) MarshalJSON() ([]byte, error) {
+	return jsonenc.Marshal(AuctionDetailsJSONPacker{
+		HintedHead: jsonenc.NewHintedHead(details.Hint()),
+		NF:         details.nft,
+		CT:         details.closeTime,
+		PR:         details.price,
+	})
+}
+
+type AuctionDetailsJSONUnpacker struct {
+	NF json.RawMessage `json:"nft"`
+	CT string          `json:"closetime"`
+	PR json.RawMessage `json:"price"`
+}
+
+func (details *AuctionDetails) UnpackJSON(b []byte, enc *jsonenc.Encoder) error {
+	var ude AuctionDetailsJSONUnpacker
+	if err := enc.Unmarshal(b, &ude); err != nil {
+		return err
+	}
+
+	return details.unpack(enc, ude.NF, ude.CT, ude.PR)
+}
+
 type PostingJSONPacker struct {
 	jsonenc.HintedHead
+	AC bool                         `json:"active"`
 	BR extensioncurrency.ContractID `json:"broker"`
 	OP PostOption                   `json:"option"`
-	NF nft.NFTID                    `json:"nft"`
-	CT PostCloseTime                `json:"closetime"`
-	PR currency.Amount              `json:"price"`
+	DE PostDetails                  `json:"details"`
 }
 
 func (posting Posting) MarshalJSON() ([]byte, error) {
 	return jsonenc.Marshal(PostingJSONPacker{
 		HintedHead: jsonenc.NewHintedHead(posting.Hint()),
+		AC:         posting.active,
 		BR:         posting.broker,
 		OP:         posting.option,
-		NF:         posting.nft,
-		CT:         posting.closeTime,
-		PR:         posting.price,
+		DE:         posting.details,
 	})
 }
 
 type PostingJSONUnpacker struct {
+	AC bool            `json:"active"`
 	BR string          `json:"broker"`
 	OP string          `json:"option"`
-	NF json.RawMessage `json:"nft"`
-	CT string          `json:"closetime"`
-	PR json.RawMessage `json:"price"`
+	DE json.RawMessage `json:"details"`
 }
 
 func (cp *Posting) UnpackJSON(b []byte, enc *jsonenc.Encoder) error {
@@ -44,7 +100,7 @@ func (cp *Posting) UnpackJSON(b []byte, enc *jsonenc.Encoder) error {
 		return err
 	}
 
-	return cp.unpack(enc, upt.BR, upt.OP, upt.NF, upt.CT, upt.PR)
+	return cp.unpack(enc, upt.AC, upt.BR, upt.OP, upt.DE)
 }
 
 type BiddingJSONPacker struct {

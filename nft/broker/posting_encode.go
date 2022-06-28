@@ -9,33 +9,76 @@ import (
 	"github.com/spikeekips/mitum/util/encoder"
 )
 
+func (details *SellDetails) unpack(
+	enc encoder.Encoder,
+	bn []byte,
+	bp []byte,
+) error {
+
+	if hinter, err := enc.Decode(bn); err != nil {
+		return err
+	} else if n, ok := hinter.(nft.NFTID); !ok {
+		return errors.Errorf("not NFTID; %T", hinter)
+	} else {
+		details.nft = n
+	}
+
+	if hinter, err := enc.Decode(bp); err != nil {
+		return err
+	} else if am, ok := hinter.(currency.Amount); !ok {
+		return errors.Errorf("not Amount; %T", hinter)
+	} else {
+		details.price = am
+	}
+
+	return nil
+}
+
+func (details *AuctionDetails) unpack(
+	enc encoder.Encoder,
+	bn []byte,
+	closeTime string,
+	bp []byte,
+) error {
+
+	if hinter, err := enc.Decode(bn); err != nil {
+		return err
+	} else if n, ok := hinter.(nft.NFTID); !ok {
+		return errors.Errorf("not NFTID; %T", hinter)
+	} else {
+		details.nft = n
+	}
+
+	details.closeTime = PostCloseTime(closeTime)
+
+	if hinter, err := enc.Decode(bp); err != nil {
+		return err
+	} else if am, ok := hinter.(currency.Amount); !ok {
+		return errors.Errorf("not Amount; %T", hinter)
+	} else {
+		details.price = am
+	}
+
+	return nil
+}
+
 func (posting *Posting) unpack(
 	enc encoder.Encoder,
+	active bool,
 	broker string,
 	option string,
-	bNFT []byte,
-	closetime string,
-	bPrice []byte,
+	bd []byte,
 ) error {
+	posting.active = active
 	posting.broker = extensioncurrency.ContractID(broker)
 	posting.option = PostOption(option)
 
-	if hinter, err := enc.Decode(bNFT); err != nil {
+	if hinter, err := enc.Decode(bd); err != nil {
 		return err
-	} else if nft, ok := hinter.(nft.NFTID); !ok {
-		return errors.Errorf("not NFTID; %T", hinter)
+	} else if details, ok := hinter.(PostDetails); !ok {
+		return errors.Errorf("not PostDetails; %T", hinter)
 	} else {
-		posting.nft = nft
-	}
-
-	posting.closeTime = PostCloseTime(closetime)
-
-	if hinter, err := enc.Decode(bPrice); err != nil {
-		return err
-	} else if price, ok := hinter.(currency.Amount); !ok {
-		return errors.Errorf("not Amount; %T", hinter)
-	} else {
-		posting.price = price
+		posting.details = details
 	}
 
 	return nil
@@ -43,20 +86,20 @@ func (posting *Posting) unpack(
 
 func (bid *Bidding) unpack(
 	enc encoder.Encoder,
-	bBidder base.AddressDecoder,
-	bAmount []byte,
+	bb base.AddressDecoder,
+	ba []byte,
 ) error {
-	bidder, err := bBidder.Encode(enc)
+	bidder, err := bb.Encode(enc)
 	if err != nil {
 		return err
 	}
 
-	if hinter, err := enc.Decode(bAmount); err != nil {
+	if hinter, err := enc.Decode(ba); err != nil {
 		return err
-	} else if amount, ok := hinter.(currency.Amount); !ok {
+	} else if am, ok := hinter.(currency.Amount); !ok {
 		return errors.Errorf("not Amount; %T", hinter)
 	} else {
-		bid.amount = amount
+		bid.amount = am
 	}
 
 	bid.bidder = bidder

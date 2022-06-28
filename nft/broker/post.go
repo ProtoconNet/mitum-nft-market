@@ -1,6 +1,7 @@
 package broker
 
 import (
+	"github.com/ProtoconNet/mitum-nft/nft"
 	"github.com/spikeekips/mitum-currency/currency"
 	"github.com/spikeekips/mitum/base"
 	"github.com/spikeekips/mitum/util"
@@ -9,16 +10,16 @@ import (
 	"github.com/spikeekips/mitum/util/valuehash"
 )
 
+var MaxPostItems = 10
+
 var (
-	PostFactType   = hint.Type("mitum-nft-post-operation-fact")
+	PostFactType   = hint.Type("mitum-nft-market-post-operation-fact")
 	PostFactHint   = hint.NewHint(PostFactType, "v0.0.1")
 	PostFactHinter = PostFact{BaseHinter: hint.NewBaseHinter(PostFactHint)}
-	PostType       = hint.Type("mitum-nft-post-operation")
+	PostType       = hint.Type("mitum-nft-market-post-operation")
 	PostHint       = hint.NewHint(PostType, "v0.0.1")
 	PostHinter     = Post{BaseOperation: operationHinter(PostHint)}
 )
-
-var MaxPostItems = 10
 
 type PostFact struct {
 	hint.BaseHinter
@@ -28,7 +29,7 @@ type PostFact struct {
 	items  []PostItem
 }
 
-func NewPostFact(token []byte, sender base.Address, items []PostItem, cid currency.CurrencyID) PostFact {
+func NewPostFact(token []byte, sender base.Address, items []PostItem) PostFact {
 	fact := PostFact{
 		BaseHinter: hint.NewBaseHinter(PostFactHint),
 		token:      token,
@@ -70,33 +71,31 @@ func (fact PostFact) IsValid(b []byte) error {
 		return err
 	}
 
-	if n := len(fact.items); n < 1 {
+	if l := len(fact.items); l < 1 {
 		return isvalid.InvalidError.Errorf("empty items for PostFact")
-	} else if n > MaxPostItems {
-		return isvalid.InvalidError.Errorf("items over allowed; %d > %d", n, MaxPostItems)
+	} else if l > MaxPostItems {
+		return isvalid.InvalidError.Errorf("items over allowed; %d > %d", l, MaxPostItems)
 	}
 
-	if err := isvalid.Check(nil, false, fact.sender); err != nil {
+	if err := fact.sender.IsValid(nil); err != nil {
 		return err
 	}
 
-	foundNFT := map[string]bool{}
+	foundNFT := map[nft.NFTID]bool{}
 	for i := range fact.items {
-		if err := isvalid.Check(nil, false, fact.items[i]); err != nil {
+		if err := fact.items[i].IsValid(nil); err != nil {
 			return err
 		}
 
-		nft := fact.items[i].NFT()
-
-		if err := nft.IsValid(nil); err != nil {
+		n := fact.items[i].Form().Details().NFT()
+		if err := n.IsValid(nil); err != nil {
 			return err
 		}
 
-		if _, found := foundNFT[nft.String()]; found {
-			return isvalid.InvalidError.Errorf("duplicate nft found; %s", nft.String())
+		if _, found := foundNFT[n]; found {
+			return isvalid.InvalidError.Errorf("duplicate nft found; %q", n)
 		}
-
-		foundNFT[nft.String()] = true
+		foundNFT[n] = true
 	}
 
 	return nil
@@ -116,9 +115,7 @@ func (fact PostFact) Items() []PostItem {
 
 func (fact PostFact) Addresses() ([]base.Address, error) {
 	as := make([]base.Address, 1)
-
-	as[0] = fact.Sender()
-
+	as[0] = fact.sender
 	return as, nil
 }
 
