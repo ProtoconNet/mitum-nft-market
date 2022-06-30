@@ -61,6 +61,8 @@ func (ipp *UnpostItemProcessor) PreProcess(
 		return err
 	} else if nv, err := collection.StateNFTValue(st); err != nil {
 		return err
+	} else if !nv.Active() {
+		return errors.Errorf("burned nft; %q", nid)
 	} else if st, err = existsState(collection.StateKeyCollection(nv.ID().Collection()), "design", getState); err != nil {
 		return err
 	} else if design, err := collection.StateCollectionValue(st); err != nil {
@@ -69,10 +71,6 @@ func (ipp *UnpostItemProcessor) PreProcess(
 		return errors.Errorf("deactivated collection; %q", nid.Collection())
 	} else {
 		n = nv
-	}
-
-	if n.Owner().String() == "" {
-		return errors.Errorf("burned nft; %q", nid)
 	}
 
 	if !n.Owner().Equal(ipp.sender) {
