@@ -99,7 +99,7 @@ func (ipp *PostItemProcessor) PreProcess(
 		if t, err := iso8601.ParseString(closeTime.String()); err != nil {
 			return err
 		} else if ipp.lastConfirmedAt.After(t) || ipp.lastConfirmedAt.Equal(t) {
-			return errors.Errorf("closetime is faster than last confirmed_at; nid, closetime: %q, last block: %q", closeTime, ipp.lastConfirmedAt.String())
+			return errors.Errorf("closetime is faster than last confirmed_at; %q, closetime: %q, last block: %q", nid, closeTime, ipp.lastConfirmedAt.String())
 		}
 	}
 
