@@ -39,7 +39,7 @@ func NewBrokerRegisterForm(target base.Address, symbol extensioncurrency.Contrac
 	}
 }
 
-func MustNewBrokerRegisterForm(target base.Address, symbol extensioncurrency.ContractID, brokerage nft.PaymentParameter, receiver base.Address, royalty bool, uri nft.URI, limit currency.Big) BrokerRegisterForm {
+func MustNewBrokerRegisterForm(target base.Address, symbol extensioncurrency.ContractID, brokerage nft.PaymentParameter, receiver base.Address, royalty bool, uri nft.URI) BrokerRegisterForm {
 	form := NewBrokerRegisterForm(target, symbol, brokerage, receiver, royalty, uri)
 	if err := form.IsValid(nil); err != nil {
 		panic(err)

@@ -108,7 +108,7 @@ func (ipp *UnpostItemProcessor) PreProcess(
 		if t, err := iso8601.ParseString(closeTime.String()); err != nil {
 			return err
 		} else if ipp.lastConfirmedAt.After(t) || ipp.lastConfirmedAt.Equal(t) {
-			return errors.Errorf("closetime is faster than last confirmed_at, try settle-auction; %q -> %q", closeTime, ipp.lastConfirmedAt.String())
+			return errors.Errorf("this auction is already over; closetime: %q", closeTime)
 		}
 	}
 

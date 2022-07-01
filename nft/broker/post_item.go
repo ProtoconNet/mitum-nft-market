@@ -28,7 +28,7 @@ func NewPostForm(option PostOption, details PostDetails) PostForm {
 	}
 }
 
-func MustNewPostForm(broker extensioncurrency.ContractID, option PostOption, details PostDetails) PostForm {
+func MustNewPostForm(option PostOption, details PostDetails) PostForm {
 	form := NewPostForm(option, details)
 
 	if err := form.IsValid(nil); err != nil {
